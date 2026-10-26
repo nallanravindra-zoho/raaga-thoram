@@ -164,7 +164,12 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main():
-    srv = ThreadingHTTPServer(("127.0.0.1", PORT), Handler)
+    try:
+        srv = ThreadingHTTPServer(("127.0.0.1", PORT), Handler)
+    except OSError:
+        print(f"Port {PORT} is already in use. The settings page may already be running: open http://127.0.0.1:{PORT}\n"
+              f"If not, stop whatever uses it (lsof -i :{PORT}) and start again.")
+        return
     url = f"http://127.0.0.1:{PORT}"
     print(f"Raaga Thoram settings: {url}   (Ctrl+C to stop)")
     if "--no-browser" not in sys.argv:
