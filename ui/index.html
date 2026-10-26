@@ -111,6 +111,22 @@ table.rg select,table.rg input{padding:5px 6px;border-radius:8px}
 .float{position:fixed;right:18px;bottom:18px;z-index:10;display:flex;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 12px;box-shadow:0 10px 30px rgba(40,20,90,.25)}
 .dirty{color:var(--bad);font-weight:700;font-size:13px}
 .hidden{display:none!important}
+.info{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:800;cursor:pointer;margin-left:6px;vertical-align:middle;position:relative;border:0;padding:0}
+.pop{position:absolute;z-index:20;left:0;top:30px;width:min(520px,86vw);background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 40px rgba(40,20,90,.3);padding:14px;font-weight:500;text-align:left;cursor:default}
+.exbox{margin-top:14px;border:1px solid var(--line);border-radius:14px;background:var(--field);padding:12px 14px}
+.exrow{display:flex;align-items:center;gap:12px;margin:6px 0;flex-wrap:wrap}
+.exrow .nm{min-width:92px;font-weight:700;font-size:13px;color:var(--mute)}
+.exrow .grp{display:flex;gap:4px;padding:4px 6px;border-radius:10px;background:var(--card);border:1px solid var(--line)}
+.exrow .grp.end{border-color:var(--accent)}
+.exrow .nt{min-width:34px;text-align:center;padding:3px 4px;border-radius:8px;font-weight:800;line-height:1.1}
+.exrow .nt small{display:block;font-size:10px;font-weight:600;color:var(--mute)}
+.look-card{border:2px solid var(--line);border-radius:14px;padding:10px;cursor:pointer;background:var(--field);text-align:center}
+.look-card.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--field))}
+.look-card img{width:100%;max-width:170px;aspect-ratio:9/16;object-fit:cover;border-radius:10px;background:#0a0e2a;display:block;margin:0 auto 8px}
+.look-card b{display:block;font-size:14.5px} .look-card small{color:var(--mute)}
+.looks3{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+.intro-pv{margin-top:14px;display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.intro-pv video{height:420px;border-radius:14px;background:#000}
 details summary{cursor:pointer;font-weight:800}
 </style>
 </head>
@@ -141,18 +157,18 @@ details summary{cursor:pointer;font-weight:800}
       <div class="grid">
         <label class="f"><span class="l">Master audio (tabla + tanpura + voice)</span><select id="master"></select></label>
         <label class="f"><span class="l">Cousin video</span><select id="cousin1"></select></label>
-        <label class="f"><span class="l">Second cousin video (optional)</span><select id="cousin2"></select></label>
-        <label class="f"><span class="l">Cousin names (commas between)</span><input type="text" id="names" placeholder="Soujanya, Soumya"></label>
+        <label class="f"><span class="l">Cousin name</span><input type="text" id="names" placeholder="Soujanya, Soumya"></label>
       </div>
     </section>
 
     <section class="card" id="s2">
       <h2><span class="n">2</span>Raga &amp; letters</h2>
       <div class="grid">
-        <label class="f"><span class="l">Sarali Varisai number</span><select id="exercise"></select></label>
+        <label class="f" style="position:relative"><span class="l">Sarali Varisai number <button type="button" class="info" id="exInfo" title="What is in this exercise?">i</button></span><select id="exercise"></select><div class="pop hidden" id="exPop"></div></label>
         <label class="f"><span class="l">Raga</span><select id="raga"></select></label>
         <div style="display:flex;align-items:flex-end;padding-bottom:6px"><label class="switch"><input type="checkbox" id="showVariants"> Show the variant numbers (R₂ G₃ …)</label></div>
       </div>
+      <div class="exbox" id="exBox"></div>
       <div class="scale" id="scale"></div>
       <div class="hint" id="ragaNote"></div>
       <span class="l" style="margin-top:6px">Letters on screen</span>
@@ -174,7 +190,7 @@ details summary{cursor:pointer;font-weight:800}
 
     <section class="card" id="s4">
       <h2><span class="n">4</span>Look</h2>
-      <div class="opt-cards" id="looks"></div>
+      <div class="looks3" id="looks"></div>
       <div class="grid" style="margin-top:16px">
         <div><span class="l">Space for the animation</span><div class="slider"><input type="range" id="animFrac" min="30" max="60"><output id="animFracO"></output></div></div>
         <div id="shiftBox"><span class="l">Push her video down (so her head is not hidden)</span><div class="slider"><input type="range" id="bgShift" min="0" max="45"><output id="bgShiftO"></output></div></div>
@@ -205,6 +221,9 @@ details summary{cursor:pointer;font-weight:800}
             <label class="f"><span class="l">Change takes (seconds)</span><input type="number" id="transSecs" min="0.2" max="2.5" step="0.1"></label></div></div>
         </div>
         <div class="preview-title" id="titlePrev"></div>
+        <div class="intro-pv"><div><button class="teal" id="playIntro">▶ Play the whole opening</button>
+          <div class="hint" style="margin:8px 0 0;max-width:260px" id="introMsg">Shows the title in this colour, then the change-over into your video, with sound. Takes about 15 seconds to make.</div></div>
+          <video id="introVid" controls class="hidden"></video></div>
         <span class="l" style="margin-top:18px">How the title changes into the video (click one)</span>
         <div class="tgrid" id="tgrid"></div>
         <button class="small" id="moreT" style="margin-top:10px">Show more</button>
@@ -292,7 +311,7 @@ function drawLetters(){
   const box = $('letters'); box.innerHTML = '';
   [['latin','English','<div class="eg">R₂</div>'],['telugu','Telugu','<div class="eg">రి</div>'],['both','Both','<div class="eg">R₂<small>రి</small></div>']].forEach(([k, n, eg]) => {
     const el = document.createElement('div'); el.className = 'opt' + (script === k ? ' on' : ''); el.innerHTML = eg + `<b>${n}</b>`;
-    el.onclick = () => { script = k; drawLetters(); refreshAnims(); mark(); }; box.appendChild(el); });
+    el.onclick = () => { script = k; drawLetters(); refreshAnims(); refreshLooks(); drawExercise(); drawScale(); mark(); }; box.appendChild(el); });
 }
 function drawRagaTable(){
   const t = $('ragaTable'); t.innerHTML = '<tr><th>Raga</th>' + LAT.map((l, i) => `<th>${l}<br><span style="font-weight:500">${TEL[i]}</span></th>`).join('') + '<th>Checked?</th><th></th></tr>';
@@ -322,6 +341,29 @@ function fillRagas(cur){
   fillSelect(sel, names, names.find(n => n.toLowerCase() === (keep || '').toLowerCase()) || keep); drawScale();
 }
 
+/* ---------- exercise contents ---------- */
+function noteChip(tok){
+  const i = LAT.indexOf(tok); if (i < 0) return null; const v = $('showVariants').checked && ragaVariants() ? (ragaVariants()[i] || '') : '';
+  const absent = ragaPresent() && ragaPresent()[i] === false;
+  const d = document.createElement('div'); d.className = 'nt'; if (absent) d.style.opacity = .35;
+  const en = LAT[i] + (SUB[v] || ''), te = TEL[i];
+  d.innerHTML = script === 'telugu' ? te : (script === 'both' ? `${en}<small>${te}</small>` : en); return d;
+}
+function exRows(ex, into){
+  into.innerHTML = '';
+  ex.lines.forEach(l => { const row = document.createElement('div'); row.className = 'exrow'; row.innerHTML = `<span class="nm">${l.name}</span>`;
+    let grp = null; const flush = end => { if (grp) { if (end) grp.classList.add('end'); row.appendChild(grp); grp = null; } };
+    l.text.split(/\s+/).filter(Boolean).forEach(t => { if (t === '|') flush(false); else if (t === '||') flush(true); else if (t === ',') { grp = grp || Object.assign(document.createElement('div'), {className: 'grp'}); const d = document.createElement('div'); d.className = 'nt'; d.textContent = '·'; grp.appendChild(d); }
+      else { const c = noteChip(t); if (c) { grp = grp || Object.assign(document.createElement('div'), {className: 'grp'}); grp.appendChild(c); } } });
+    flush(false); into.appendChild(row); });
+}
+async function drawExercise(){
+  const n = $('exercise').value || 1; let ex; try { ex = await getEx(n); } catch (e) { return; }
+  $('exBox').innerHTML = `<div class="l" style="margin-bottom:2px">Exercise ${n}: the notes she sings</div><div id="exRows"></div><div class="hint" style="margin:6px 0 0">Each box is one beat group; the outlined box ends a cycle of 8 beats.</div>`;
+  exRows(ex, $('exRows'));
+  $('exPop').innerHTML = `<b>Exercise ${n}</b><div id="exPopRows" style="margin-top:8px"></div>`; exRows(ex, $('exPopRows'));
+}
+
 /* ---------- live animation previews ---------- */
 async function getEx(n){ if (!exCache[n]) exCache[n] = await api('/api/exercise?n=' + n); return exCache[n]; }
 function stopAnims(){ anims.forEach(a => { clearInterval(a.timer); a.obs && a.obs.disconnect(); }); anims = []; }
@@ -349,6 +391,7 @@ function refreshAnims(){ clearTimeout(refreshT); refreshT = setTimeout(async () 
   document.querySelectorAll('#parts .pv').forEach((b, i) => mkPreview(b, parts[i].style, parts[i].speed, 270)); }, 350); }
 
 function drawParts(){
+  refreshLooks();
   const box = $('parts'); box.innerHTML = '';
   parts.forEach((p, i) => {
     const row = document.createElement('div'); row.className = 'speed'; if (i === selPart) row.style.borderColor = 'var(--accent)';
@@ -371,12 +414,24 @@ function drawParts(){
 }
 
 /* ---------- look / intro ---------- */
+let lookT = null, lookNonce = 0;
 function drawLooks(){
   const box = $('looks'); box.innerHTML = '';
-  LOOKS.forEach(([k, name, d]) => { const el = document.createElement('div'); el.className = 'opt' + (look === k ? ' on' : ''); el.innerHTML = `<b>${name}</b><small>${d}</small>`;
-    el.onclick = () => { look = k; drawLooks(); mark(); }; box.appendChild(el); });
+  LOOKS.forEach(([k, name, d]) => { const el = document.createElement('div'); el.className = 'look-card' + (look === k ? ' on' : ''); el.dataset.k = k;
+    el.innerHTML = `<img alt="" data-k="${k}"><b>${name}</b><small>${d}</small>`;
+    el.onclick = () => { look = k; document.querySelectorAll('.look-card').forEach(c => c.classList.toggle('on', c.dataset.k === k)); $('shiftBox').classList.toggle('hidden', k !== 'background'); mark(); }; box.appendChild(el); });
   $('shiftBox').classList.toggle('hidden', look !== 'background');
+  refreshLooks();
 }
+function refreshLooks(){
+  clearTimeout(lookT); lookT = setTimeout(async () => { const n = ++lookNonce, p = parts[0] || {style: 'staircase', speed: 1};
+    document.querySelectorAll('.look-card img').forEach(im => im.style.opacity = .4);
+    const q = new URLSearchParams({ep: $('ep').value, frac: parseInt($('animFrac').value) / 100, shift: parseInt($('bgShift').value) / 100, style: p.style, script, raga: $('raga').value, speed: p.speed});
+    try { const r = await api('/api/looks?' + q); if (n !== lookNonce) return;
+      LOOKS.forEach(([k]) => { const im = document.querySelector(`.look-card img[data-k="${k}"]`); if (im && r[k]) { im.src = r[k]; im.style.opacity = 1; } }); }
+    catch (e) { document.querySelectorAll('.look-card img').forEach(im => im.style.opacity = 1); } }, 700);
+}
+
 function drawLines(){
   const box = $('lines'); box.innerHTML = '';
   lines.forEach((t, i) => { const row = document.createElement('div'); row.className = 'row'; row.style.marginBottom = '8px';
@@ -426,7 +481,6 @@ async function load(){
   const vids = files.filter(f => /\.(mp4|mov|m4v|mkv)$/i.test(f)), auds = files.filter(f => /\.(mp3|wav|m4a|aac|flac|aiff?)$/i.test(f));
   fillSelect($('master'), auds.length ? auds : files, val('master', ''));
   fillSelect($('cousin1'), vids.length ? vids : files, (cfg.cousins || [])[0] || '', '(none)');
-  fillSelect($('cousin2'), vids.length ? vids : files, (cfg.cousins || [])[1] || '', '(none)');
   $('names').value = (cfg.cousin_names || []).join(', ');
   fillSelect($('exercise'), Array.from({length: 10}, (_, i) => String(i + 1)), String(val('exercise', 1)));
   ragas = await api('/api/ragas'); fillRagas(val('raga', 'Kalyani')); drawRagaTable();
@@ -444,10 +498,10 @@ async function load(){
   theme = val('intro_theme', 'purple'); drawSwatches(); $('introSecs').value = val('intro_seconds', 5); trans = val('intro_transition', 'dissolve'); drawTrans();
   $('transSecs').value = val('intro_transition_seconds', 0.8); $('hashtags').value = val('hashtags', '');
   $('bpm').value = val('bpm', 'auto'); $('countIn').value = val('count_in_beats', 0); $('tol').value = cfg.follow_tolerance || ''; $('title').value = cfg.title || '';
-  drawPreview(); clean(); summary(); showOutputs(); setupInitialLog();
+  drawPreview(); drawExercise(); clean(); summary(); showOutputs(); setupInitialLog();
 }
 function collect(){
-  const cousins = [$('cousin1').value, $('cousin2').value].filter(Boolean), names = $('names').value.split(',').map(s => s.trim()).filter(Boolean);
+  const cousins = [$('cousin1').value].filter(Boolean), names = $('names').value.split(',').map(s => s.trim()).filter(Boolean);
   const ps = parts.map(p => Object.assign({}, p._extra || {}, {speed: p.speed, style: p.style, pattern_start: p.start}));
   const bpmRaw = $('bpm').value.trim(), bpm = bpmRaw === '' || bpmRaw.toLowerCase() === 'auto' ? 'auto' : parseFloat(bpmRaw);
   return {master: $('master').value, cousins, cousin_names: names, exercise: parseInt($('exercise').value), raga: $('raga').value.trim(), script, show_variants: $('showVariants').checked,
@@ -490,12 +544,19 @@ async function init(){
   O.episodes.forEach(e => $('ep').add(new Option(e, e)));
   const last = localStorage.getItem('rt-ep'); if (last && O.episodes.includes(last)) $('ep').value = last;
   const th = localStorage.getItem('rt-theme'); if (th) document.documentElement.dataset.theme = th;
-  slider('animFrac', 'animFracO', v => v + '% of the height'); slider('bgShift', 'bgShiftO', v => v + '%'); slider('lag', 'lagO', v => (v > 0 ? '+' : '') + v.toFixed(2) + ' s');
+  slider('animFrac', 'animFracO', v => { refreshLooks(); return v + '% of the height'; }); slider('bgShift', 'bgShiftO', v => { refreshLooks(); return v + '%'; }); slider('lag', 'lagO', v => (v > 0 ? '+' : '') + v.toFixed(2) + ' s');
   document.querySelectorAll('main input,main select,main textarea').forEach(el => { if (!el.closest('#ragaTable') && !el.closest('.speed')) el.addEventListener('input', mark); });
   $('introOn').addEventListener('input', drawPreview);
-  $('raga').addEventListener('input', () => { drawScale(); refreshAnims(); });
-  $('showVariants').addEventListener('input', () => { drawScale(); refreshAnims(); });
-  $('exercise').addEventListener('input', () => { exCache = {}; refreshAnims(); });
+  $('playIntro').onclick = async () => { const b = $('playIntro'); b.disabled = true; $('introMsg').textContent = 'Making the preview… about 15 seconds.';
+    try { const r = await api('/api/intro_preview', {ep: $('ep').value, values: {intro_title: lines.map(s => s.trim()).filter(Boolean), intro_theme: theme, intro_seconds: parseFloat($('introSecs').value),
+        intro_transition: trans, intro_transition_seconds: parseFloat($('transSecs').value)}});
+      const v = $('introVid'); v.src = r.url + '?t=' + Date.now(); v.classList.remove('hidden'); v.play().catch(() => {}); $('introMsg').textContent = 'Change the colour, lines or change-over and press the button again to see the new one.'; }
+    catch (e) { $('introMsg').textContent = 'Could not make it: ' + e.message; } b.disabled = false; };
+  $('raga').addEventListener('input', () => { drawScale(); refreshAnims(); refreshLooks(); drawExercise(); });
+  $('showVariants').addEventListener('input', () => { drawScale(); refreshAnims(); drawExercise(); });
+  $('exercise').addEventListener('input', () => { exCache = {}; refreshAnims(); drawExercise(); });
+  $('exInfo').onclick = e => { e.preventDefault(); $('exPop').classList.toggle('hidden'); };
+  document.addEventListener('click', e => { if (!e.target.closest('#exPop') && e.target.id !== 'exInfo') $('exPop').classList.add('hidden'); });
   $('ep').onchange = () => { localStorage.setItem('rt-ep', $('ep').value); load(); };
   $('themeBtn').onclick = () => { const d = document.documentElement; const cur = d.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); d.dataset.theme = cur === 'dark' ? 'light' : 'dark'; localStorage.setItem('rt-theme', d.dataset.theme); };
   $('newEp').onclick = async () => { const n = prompt('Name for the new episode (letters, numbers, - and _), for example ep04'); if (!n) return;

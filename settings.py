@@ -81,9 +81,13 @@ def two_stills():
     PREVIEWS.mkdir(exist_ok=True)
     a, b = PREVIEWS / "A.png", PREVIEWS / "B.png"
     with STILL_LOCK:
+        cache = HERE / "content" / "titles" / "cache"
+        intros = sorted(cache.glob("*540x960*.mp4"), key=lambda f: f.stat().st_mtime, reverse=True) if cache.exists() else []
+        if intros and a.exists() and intros[0].stat().st_mtime > a.stat().st_mtime:
+            for old in PREVIEWS.glob("t_*.mp4"):
+                old.unlink()
+            a.unlink()
         if not a.exists():
-            cache = HERE / "content" / "titles" / "cache"
-            intros = sorted(cache.glob("*540x960*.mp4"), key=lambda f: f.stat().st_mtime, reverse=True) if cache.exists() else []
             for f in intros:
                 subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-ss", "3.6", "-i", str(f), "-frames:v", "1", "-vf", "scale=270:480", str(a)])
                 if a.exists():
@@ -121,6 +125,160 @@ def transition_preview(name):
             if r.returncode != 0:
                 raise RuntimeError(r.stderr[-200:])
     return f"/previews/t_{name}.mp4"
+
+
+LOOK_LOCK = threading.Lock()
+INTRO_LOCK = threading.Lock()
+
+
+from concurrent.futures import ThreadPoolExecutor  # noqa: E402
+
+_PW = ThreadPoolExecutor(max_workers=1)      # one thread owns the browser; it stays open between previews
+_PWS = {}
+
+
+def _anim_pngs(cfgs, t=3.2):
+    """One frame of the animation for each config (PIL images). The browser and page are kept open, so only the first call is slow."""
+    import base64
+    import io
+    from PIL import Image
+
+    def work():
+        if "page" not in _PWS:
+            from playwright.sync_api import sync_playwright
+            _PWS["pw"] = sync_playwright().start()
+            try:
+                _PWS["b"] = _PWS["pw"].chromium.launch(channel="chrome", headless=True)
+            except Exception:
+                _PWS["b"] = _PWS["pw"].chromium.launch(headless=True)
+            _PWS["page"] = _PWS["b"].new_page(viewport={"width": 600, "height": 800})
+            _PWS["page"].goto((HERE / "render" / "render.html").as_uri())
+        pg = _PWS["page"]
+        res = []
+        for c in cfgs:
+            pg.evaluate("c => initRender(c)", c)
+            res.append(pg.evaluate("t => renderFrame(t)", t))
+        return res
+    return [Image.open(io.BytesIO(base64.b64decode(d))).convert("RGBA") for d in _PW.submit(work).result()]
+
+
+def look_previews(ep, frac, shift, style, script, raga, speed):
+    """Pictures of how each look will be laid out, built from one frame of the cousin's video. Returns {look: png bytes}."""
+    import io
+    import tempfile
+    from PIL import Image
+    W, H = 270, 480
+    cfgj = read_config(ep)
+    clip = (cfgj.get("cousins") or [None])[0]
+    tmp = Path(tempfile.mkdtemp())
+    fr = tmp / "f.png"
+    got = False
+    if clip and (ep_dir(ep) / clip).exists():
+        for ss in ("20", "6", "1"):
+            subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-ss", ss, "-i", str(ep_dir(ep) / clip), "-frames:v", "1", str(fr)])
+            if fr.exists() and fr.stat().st_size > 0:
+                got = True
+                break
+    vid = Image.open(fr).convert("RGB") if got else Image.new("RGB", (540, 960), (90, 60, 50))
+
+    def cover(img, w, h, focus=0.3):
+        k = max(w / img.width, h / img.height)
+        im = img.resize((max(w, round(img.width * k)), max(h, round(img.height * k))), Image.LANCZOS)
+        x = (im.width - w) // 2
+        y = round((im.height - h) * focus)
+        return im.crop((x, y, x + w, y + h))
+
+    ex = exercise(cfgj.get("exercise", 1))
+    lib = read_ragas()
+    key = re.sub(r"\s+", "", raga or "").lower()
+    notes = next((v["notes"] for k, v in lib.items() if not k.startswith("_") and re.sub(r"\s+", "", k).lower() == key), None)
+    base = {"style": style, "script": script, "title": raga or "", "speedTag": False, "bpm": 100, "exercise": ex,
+            "parts": [{"style": style, "speed": speed, "npb": {1: 1, 2: 2, 3: 4}.get(speed, 1), "start": 0.5, "end": 1e6, "knots": None}],
+            "variants": [("" if n is None else str(n)) for n in notes] if notes else None, "present": [n is not None for n in notes] if notes else None,
+            "scale": 0.75}
+    import numpy as np
+    Ha = round(frac * 1920)
+    anims = _anim_pngs([{**base, "designH": Ha / 3.0, "transparent": True},
+                        {**base, "designH": Ha / 3.0, "canvasH": 640.0},
+                        {**base, "designH": Ha / 3.0}])
+    results = {}
+
+    def png(img):
+        buf = io.BytesIO()
+        img.convert("RGB").save(buf, "PNG")
+        return buf.getvalue()
+
+    # full video background
+    anim = anims[0]
+    sy = round(H * shift)
+    c = vid.crop((0, 0, vid.width, max(2, vid.height // 16))).resize((1, 1), Image.LANCZOS).getpixel((0, 0))
+    out = Image.new("RGB", (W, H), c)
+    ramp = max(2, int(H * 0.16))
+    col = np.full((H, 1), 255, np.uint8)
+    col[:ramp, 0] = (np.linspace(0, 1, ramp) ** 1.3 * 255).astype(np.uint8)
+    out.paste(cover(vid, W, H, 0.3), (0, sy), Image.fromarray(np.repeat(col, W, 1), "L"))
+    rows = np.clip(1 - np.arange(H) / (0.62 * H), 0, 1) ** 1.4 * 0.62
+    scrim = Image.new("RGBA", (W, H), (4, 6, 20, 0))
+    scrim.putalpha(Image.fromarray((np.repeat(rows[:, None], W, 1) * 255).astype(np.uint8), "L"))
+    out = Image.alpha_composite(out.convert("RGBA"), scrim)
+    out.paste(anim, (0, 0), anim)
+    results["background"] = png(out)
+
+    # cut-out: she stands on the animation's own background
+    out = anims[1].copy()
+    ch = round(H * 0.5)
+    person = cover(vid, W, ch, 0.0)
+    tool = HERE / "tools" / "bin" / "matte"
+    alpha = None
+    if tool.exists():
+        si, so = tmp / "in", tmp / "out"
+        si.mkdir()
+        so.mkdir()
+        person.save(si / "00001.png")
+        subprocess.run([str(tool), str(si), str(so)], capture_output=True)
+        m = so / "00001.png"
+        if m.exists():
+            alpha = Image.open(m).convert("L").resize((W, ch))
+    out.paste(person.convert("RGBA"), (0, H - ch), alpha)
+    results["cutout"] = png(out)
+
+    # stacked: animation above, her video below
+    anim = anims[2]
+    out = Image.new("RGBA", (W, H), (10, 14, 42, 255))
+    out.paste(cover(vid, W, H - anim.height, 0.3).convert("RGBA"), (0, anim.height))
+    out.paste(anim, (0, 0))
+    results["stacked"] = png(out)
+    shutil.rmtree(tmp, ignore_errors=True)
+    return results
+
+
+def intro_preview(ep, vals):
+    """The whole opening (title, then the change-over into the video) at a small size, as a video."""
+    import hashlib
+    import tempfile
+    PREVIEWS.mkdir(exist_ok=True)
+    keys = ("intro_title", "intro_theme", "intro_seconds", "intro_transition", "intro_transition_seconds")
+    S2 = dict(rt.DEFAULTS)
+    S2.update({k: vals[k] for k in keys if k in vals})
+    S2["intro"] = True
+    h = hashlib.md5(json.dumps([S2[k] for k in keys], sort_keys=True, default=str).encode()).hexdigest()[:10]
+    out = PREVIEWS / f"intro_{ep}_{h}.mp4"
+    if out.exists():
+        return f"/previews/{out.name}"
+    d = ep_dir(ep) / "out"
+    body = next((f for f in (d / "body.mp4", d / "body_preview.mp4") if f.exists()), None)
+    tmp = Path(tempfile.mkdtemp())
+    clip = tmp / "body.mp4"
+    if body:
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-ss", "20", "-t", "3.5", "-i", str(body), "-vf", "scale=360:640,fps=30", "-c:v", "libx264", "-crf", "26",
+                        "-preset", "veryfast", "-c:a", "aac", "-ar", "48000", "-ac", "2", str(clip)], check=True)
+    else:
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "lavfi", "-i", "color=c=0x16205a:s=360x640:r=30:d=3.5", "-f", "lavfi", "-i", "anullsrc=r=48000:cl=stereo",
+                        "-t", "3.5", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", str(clip)], check=True)
+    rep = rt.Report()
+    rt.add_intro(S2, clip, out, 360 / 1080, rep)
+    shutil.rmtree(tmp, ignore_errors=True)
+    return f"/previews/{out.name}"
 
 
 def options():
@@ -251,6 +409,12 @@ class Handler(BaseHTTPRequestHandler):
                 self.send(read_ragas())
             elif u.path == "/api/transition":
                 self.send({"url": transition_preview(q.get("name", ""))})
+            elif u.path == "/api/looks":
+                import base64
+                with LOOK_LOCK:
+                    res = look_previews(q["ep"], float(q.get("frac", 0.45)), float(q.get("shift", 0.3)),
+                                        q.get("style", "staircase"), q.get("script", "latin"), q.get("raga", ""), int(q.get("speed", 1)))
+                self.send({k: "data:image/png;base64," + base64.b64encode(v).decode() for k, v in res.items()})
             elif u.path == "/api/outputs":
                 d = ep_dir(q["ep"]) / "out"
                 self.send({n: (d / n).exists() for n in ("final.mp4", "preview.mp4", "cover.png", "caption.txt", "report.txt")})
@@ -276,6 +440,9 @@ class Handler(BaseHTTPRequestHandler):
                 self.send({"config": save_config(data["ep"], data["values"])})
             elif u.path == "/api/ragas":
                 self.send(save_ragas(data))
+            elif u.path == "/api/intro_preview":
+                with INTRO_LOCK:
+                    self.send({"url": intro_preview(data["ep"], data["values"])})
             elif u.path == "/api/new":
                 new_episode(data["ep"])
                 self.send({"episodes": list_episodes()})
@@ -301,6 +468,14 @@ def main():
         return
     url = f"http://127.0.0.1:{PORT}"
     print(f"Raaga Thoram settings: {url}   (Ctrl+C to stop)")
+
+    def warm():                                    # open the preview browser now so the first preview is quick
+        try:
+            _anim_pngs([{"style": "staircase", "script": "latin", "title": "", "speedTag": False, "bpm": 100, "exercise": exercise(1),
+                         "parts": [{"style": "staircase", "speed": 1, "npb": 1, "start": 0.5, "end": 1e6, "knots": None}], "scale": 0.5, "designH": 100}])
+        except Exception:
+            pass
+    threading.Thread(target=warm, daemon=True).start()
     if "--no-browser" not in sys.argv:
         threading.Timer(0.6, lambda: webbrowser.open(url)).start()
     try:
