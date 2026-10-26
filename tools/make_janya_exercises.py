@@ -50,11 +50,11 @@ def main():
             i += 1
             while i < len(text) and (text[i].startswith(" ") or not text[i].strip()):
                 ln = text[i]
-                lm = re.match(r"(\s+(?:up\+down|up|down)\s+)([SRGMPDNŚ,].*)$", ln)
+                lm = re.match(r"(\s+(?:up\+down|up|down|line \d+)\s+)([SRGMPDNŚ,].*)$", ln)
                 if lm and i + 1 < len(text):
                     lat, tel = lm.group(2).split(), text[i + 1].split()
                     # the Telugu line has the same tokens as the English one (it may lack the closing ||)
-                    tail = text[i + 1].strip().split()[1:] if text[i + 1].strip().split()[0] in ("up", "down", "up+down") else text[i + 1].split()
+                    tail = text[i + 1].split()
                     new_l, new_t = [], []
                     for k, a in enumerate(lat):
                         gone = a in absent

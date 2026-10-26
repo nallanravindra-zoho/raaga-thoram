@@ -39,3 +39,13 @@ Speeds: 1 note per beat, 2 per beat, 4 per beat (the beat tempo stays the same).
            స రి గ , | ప , | గ రి || స రి గ , | ప ద | , స̇
   down     Ś , D P | , P | D , || Ś , D P | , G | R S ||
            స̇ , ద ప | , ప | ద , || స̇ , ద ప | , గ | రి స
+
+8.
+  line 1   S R G , | P , | G , || P , , , | P , | , , ||
+           స రి గ , | ప , | గ , || ప , , , | ప , | , ,
+  line 2   G , P D | , D | P , || G , P G | , G | R S ||
+           గ , ప ద | , ద | ప , || గ , ప గ | , గ | రి స
+  line 3   Ś , , D | , , | D P || D , P , | P , | P , ||
+           స̇ , , ద | , , | ద ప || ద , ప , | ప , | ప ,
+  line 4   G , P D | , D | P , || G , P G | , G | R S ||
+           గ , ప ద | , ద | ప , || గ , ప గ | , గ | రి స
