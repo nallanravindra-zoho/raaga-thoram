@@ -1,0 +1,21 @@
+# local environment
+.venv/
+__pycache__/
+.DS_Store
+
+# builds, recordings and generated media stay on this machine
+episodes/*/out/
+episodes/*/*.mp4
+episodes/*/*.mov
+episodes/*/*.mp3
+episodes/*/*.wav
+episodes/*/*.m4a
+episodes/demo/
+episodes/demo1/
+content/titles/*.mp4
+content/titles/*.m4a
+content/titles/cache/
+content/tabla_loop/*.wav
+content/tabla_loop/samples/*
+!content/tabla_loop/samples/README.txt
+tools/bin/

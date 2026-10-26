@@ -1,0 +1,31 @@
+{
+  "_help": "Copy this file into a new folder under episodes/, next to master.wav and the cousins' clips. Delete lines you don't need.",
+
+  "master": "master.wav",
+  "cousins": ["cousins.mp4"],
+  "cousin_names": ["Soujanya", "Soumya"],
+
+  "exercise": 2,
+  "speed": 2,
+  "bpm": 60,
+  "follow_voice": true,
+  "follow_lag": -0.12,
+  "_follow_lag_help": "seconds. More negative = animation earlier, closer to 0 or positive = later. Try steps of 0.05 to 0.1",
+  "pattern_start": 0.0,
+
+  "style": "staircase",
+  "_style_options": "staircase, karaoke, bignote, falling, pitchtrail, gauge, pads, arcs",
+  "script": "latin",
+  "_script_options": "latin or telugu",
+
+  "raga": "Kalyani",
+  "animation_fraction": 0.45,
+  "face_focus": 0.3,
+  "cousin_look": "cutout",
+  "_cousin_look_options": "cutout = cousins are cut out of their background and stand on the animation's background; stacked = plain video strip under the animation",
+  "cousin_height": 0.5,
+  "cutout_focus": 0.0,
+  "_cutout_focus_help": "0 keeps the top of the cousins' frame, 1 the bottom. Raise it if heads are cut off or too much empty space shows above.",
+  "count_in_beats": 3,
+  "hashtags": "#carnatic #carnaticmusic #saralivarisai #learnmusic #swaram"
+}

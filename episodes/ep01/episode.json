@@ -1,0 +1,23 @@
+{
+  "_help": "Copy this file into a new folder under episodes/, next to master.wav and the cousins' clips. Delete lines you don't need.",
+
+  "master": "master.wav",
+  "cousins": ["cousins.mp4"],
+  "cousin_names": ["Soujanya", "Soumya"],
+
+  "exercise": 2,
+  "speed": 1,
+  "bpm": "auto",
+  "pattern_start": 2.0,
+
+  "style": "staircase",
+  "_style_options": "staircase, karaoke, bignote, falling, pitchtrail, gauge, pads, arcs",
+  "script": "latin",
+  "_script_options": "latin or telugu",
+
+  "raga": "Kalyani",
+  "animation_fraction": 0.55,
+  "face_focus": 0.3,
+  "count_in_beats": 3,
+  "hashtags": "#carnatic #carnaticmusic #saralivarisai #learnmusic #swaram"
+}

@@ -1,0 +1,282 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Noto+Sans+Telugu:wght@500;700&display=swap" rel="stylesheet">
+<style>html,body{margin:0;background:#0A0E2A}canvas{display:block}</style></head>
+<body><canvas id="cv"></canvas>
+<script>
+/* Draws one frame of the swaram animation for a given time. Driven from Python:
+   initRender(cfg) once, then renderFrame(t) for each frame. Design space is 360 x H, scaled up to the real canvas.
+   Styles: staircase, karaoke, bignote, falling, pitchtrail, gauge, pads, arcs. */
+var g, S, W = 360, H = 352, CH = 352, CFG;
+var VIO = '#9A8CFF', TEAL = '#5BE3D0', MUTE = '#7A82B8';
+var LAT = ['S','R','G','M','P','D','N','Ś'];
+var TEL = ['స','రి','గ','మ','ప','ద','ని','\u0C38\u0C02'];
+var ACT = ['Clap','1','2','3','Clap','Wave','Clap','Wave'];
+var PARTS = [], PK = [], PI = 0, telugu = false, SEQ = [], NPB = 1, BPM = 60, START = 0, CYCLES = [], LINES = [], LSTART = [], NOTE_PX = 44;
+
+var SUBS = { '1': '\u2081', '2': '\u2082', '3': '\u2083' };
+function lab(i){ var v = (CFG && CFG.variants && CFG.variants[i]) || ''; return (telugu ? TEL[i] : LAT[i]) + (SUBS[v] || v); }
+function col(i){ return 'hsl(' + ((i * 45 + 8) % 360) + ',82%,62%)'; }
+function fnt(sz, wt, tel){ return (wt || 400) + ' ' + sz + 'px ' + (tel ? "'Noto Sans Telugu','Telugu MN','Telugu Sangam MN'," : '') + "Manrope,'Helvetica Neue',Arial,sans-serif"; }
+function txt(s, x, y, sz, c, al, wt, tel){ g.font = fnt(sz, wt, tel); g.fillStyle = c; g.textAlign = al || 'left'; g.textBaseline = 'middle'; g.fillText(s, x, y); }
+function rr(x, y, w, h, r){ g.beginPath(); g.roundRect(x, y, w, h, r); }
+function tl(sz){ return telugu ? sz * 0.78 : sz; }   // Telugu glyphs are wider, so draw them a little smaller
+
+window.initRender = async function(cfg){
+  CFG = cfg; telugu = cfg.script === 'telugu';
+  SEQ = cfg.exercise.seq; CYCLES = cfg.exercise.cycles; LINES = cfg.exercise.lines; LSTART = cfg.exercise.lineStarts;
+  BPM = cfg.bpm; PARTS = cfg.parts; pickPart(PARTS[0].start);
+  S = cfg.scale; H = cfg.designH; CH = cfg.canvasH || cfg.designH;
+  var cv = document.getElementById('cv');
+  cv.width = Math.round(W * S); cv.height = Math.round(CH * S);
+  g = cv.getContext('2d'); g.scale(S, S);
+  try {
+    await Promise.all([document.fonts.load('800 20px Manrope'), document.fonts.load('700 14px Manrope'),
+                       document.fonts.load('700 20px "Noto Sans Telugu"', 'సరి')]);
+    await document.fonts.ready;
+  } catch (e) {}
+  return true;
+};
+
+/* note position (fractional note number) at time t. Normally a fixed tempo; with sync points (the times a
+   singer actually began each line or cycle) the animation is stretched between them so it follows the voice. */
+/* one episode can hold several runs of the exercise (speed 1, 2, 3). Pick the one that is current at time t:
+   switch to the next shortly before it starts (the 'Get ready' lead-in), but never before the previous one ended. */
+function pickPart(t){
+  var k = 0;
+  for (var i = 1; i < PARTS.length; i++) if (t >= Math.max(Math.min(PARTS[i - 1].end, PARTS[i].start - 0.5), PARTS[i].start - 3.5)) k = i;
+  PI = k; NPB = PARTS[k].npb; START = PARTS[k].start; PK = PARTS[k].knots || [];
+}
+function xOf(t){
+  var rate = NPB * BPM / 60, K = PK;
+  if (!K.length) return (t - START) * rate;
+  if (t <= K[0][0]) return K[0][1] + (t - K[0][0]) * rate;
+  for (var k = 1; k < K.length; k++) if (t <= K[k][0]) return K[k - 1][1] + (K[k][1] - K[k - 1][1]) * (t - K[k - 1][0]) / (K[k][0] - K[k - 1][0]);
+  var q = K.length > 1 ? (K[K.length - 1][1] - K[K.length - 2][1]) / (K[K.length - 1][0] - K[K.length - 2][0]) : rate;
+  return K[K.length - 1][1] + (t - K[K.length - 1][0]) * q;
+}
+function state(t){
+  var N = SEQ.length, x = xOf(t), nb = x / NPB, total = N / NPB;
+  if (x < 0) return { n: 0, f: 0, on: false, nb: nb, pre: true, done: false };
+  if (nb >= total) return { n: N - 1, f: 1, on: false, nb: total, pre: false, done: true };
+  var n = Math.floor(x), slope = (xOf(t + 0.04) - x) / 0.04;      // notes per second right now
+  return { n: n, f: x - n, on: true, nb: nb, pre: false, done: false, dur: slope > 0.05 ? 1 / slope : 20 };
+}
+function cycleOf(n){ var c = 0; for (var k = 0; k < CYCLES.length; k++) if (CYCLES[k].start <= n) c = k; return c; }
+
+/* header: title, the eight beats of the tala with hand actions, progress */
+function header(st){
+  txt((CFG.title + (CFG.speedTag ? '  ·  Speed ' + PARTS[PI].speed : '')).toUpperCase(), W / 2, 12, 10.5, VIO, 'center', 700);
+  var cur = st.on ? Math.floor(st.nb) % 8 : -1, y = 34, dotN = Math.min(st.n, SEQ.length - 1);
+  for (var k = 0; k < 8; k++) {
+    var x = 24 + k * 44.6, on = k === cur, done = st.done || (st.on && k < cur);
+    g.fillStyle = on ? col(SEQ[dotN].i) : (done ? 'rgba(223,227,255,.55)' : 'rgba(142,152,214,.25)');
+    g.beginPath(); g.arc(x, y, on ? 6.5 : 4.5, 0, 7); g.fill();
+    txt(ACT[k], x, y + 14, on ? 9.5 : 8.5, on ? '#fff' : MUTE, 'center', on ? 700 : 500);
+  }
+  var cycles = SEQ.length / NPB / 8, cyc = st.on ? Math.min(Math.floor(st.nb / 8) + 1, cycles) : (st.done ? cycles : 0);
+  var info = st.pre ? 'Get ready' : 'Cycle ' + cyc + ' of ' + cycles + '   ·   Note ' + (st.n + 1) + ' of ' + SEQ.length;
+  txt(info, W / 2, 62, 9.5, 'rgba(223,227,255,.85)', 'center', 600);
+}
+
+function thisBeat(st, cx, y, cw, ch){
+  if (!st.on) return;
+  var first = Math.floor(st.nb) * NPB, gap = 5, tot = NPB * cw + (NPB - 1) * gap, x0 = cx - tot / 2;
+  txt('This beat', cx, y - 8, 9, MUTE, 'center', 600);
+  for (var k = 0; k < NPB; k++) {
+    var m = first + k; if (m >= SEQ.length) break;
+    var x = x0 + k * (cw + gap), on = m === st.n, done = m < st.n;
+    g.fillStyle = on ? col(SEQ[m].i) : 'rgba(142,152,214,.16)';
+    if (on) { g.shadowColor = col(SEQ[m].i); g.shadowBlur = 10; }
+    rr(x, y, cw, ch, 8); g.fill(); g.shadowBlur = 0;
+    txt(lab(SEQ[m].i), x + cw / 2, y + ch / 2 + 1, tl(15), on ? '#0a0e2a' : (done ? '#e9ebff' : 'rgba(142,152,214,.7)'), 'center', 800, telugu);
+    if (SEQ[m].rep) txt('↺', x + cw - 5, y + 6, 8, on ? '#0a0e2a' : MUTE, 'center', 700);
+  }
+}
+function upDown(n){ return n < SEQ.length / 2 ? ['Going up', VIO] : ['Coming down', TEAL]; }
+
+/* ---------- B. staircase ---------- */
+function sB(st, R){
+  var n = st.n, cur = SEQ[n].i, ud = upDown(n);
+  txt(ud[0], R.x + 56, R.y + 6, 9.5, ud[1], 'center', 700);
+  txt(lab(cur), R.x + 56, R.y + 44, tl(44), col(cur), 'center', 800, telugu);
+  if (SEQ[n].rep && st.on) txt('repeat', R.x + 56, R.y + 74, 9, MUTE, 'center', 600);
+  thisBeat(st, R.x + R.w * 0.66, R.y + 22, 32, 30);
+  var base = R.y + R.h, rise = (R.h - 120) / 7, pw = R.w / 8;
+  function XY(i){ return [R.x + (i + 0.5) * pw, base - 26 - i * rise]; }
+  for (var i = 0; i < 8; i++) {
+    var p = XY(i), on = st.on && SEQ[n].i === i;
+    g.fillStyle = col(i); g.globalAlpha = on ? 1 : 0.45; if (on) { g.shadowColor = col(i); g.shadowBlur = 14; }
+    rr(p[0] - pw / 2 + 2, p[1], pw - 4, base - p[1] + 6, 5); g.fill(); g.shadowBlur = 0; g.globalAlpha = 1;
+    txt(lab(i), p[0], p[1] + 15, tl(15), '#0a0e2a', 'center', 800, telugu);
+  }
+  var ip = n > 0 ? SEQ[n - 1].i : cur, a = XY(ip), b = XY(cur), f = st.on ? Math.min(st.f * st.dur / Math.min(0.2, st.dur * 0.62), 1) : 1;
+  var hop = NPB >= 4 ? 14 : (NPB === 2 ? 20 : 26); if (ip === cur) hop = Math.min(hop, 14);
+  var x = a[0] + (b[0] - a[0]) * f, y = a[1] + (b[1] - a[1]) * f - Math.sin(f * Math.PI) * hop - 13;
+  g.fillStyle = 'rgba(0,0,0,.28)'; g.beginPath(); g.ellipse(x, b[1] + 3, 10 - 3 * Math.sin(f * Math.PI), 3, 0, 0, 7); g.fill();
+  g.fillStyle = '#fff'; g.shadowColor = col(cur); g.shadowBlur = 16; g.beginPath(); g.arc(x, y, 10, 0, 7); g.fill(); g.shadowBlur = 0;
+  g.fillStyle = col(cur); g.beginPath(); g.arc(x, y, 5, 0, 7); g.fill();
+}
+
+/* ---------- A. karaoke line ---------- */
+function sA(st, R){
+  var n = st.n, c = cycleOf(n), li = CYCLES[c].line, rows = [];
+  CYCLES.forEach(function(cy, k){ if (cy.line === li) rows.push(k); });
+  var ud = upDown(n);
+  rows.forEach(function(k, ri){
+    var cy = CYCLES[k], y = R.y + R.h * (ri === 0 ? 0.30 : 0.76);
+    txt(rows.length > 1 ? (ri === 0 ? 'First cycle' : 'Second cycle') : ud[0], R.x + R.w / 2, y - 34, 9.5, ud[1], 'center', 700);
+    var items = [], pos = cy.start;
+    cy.groups.forEach(function(gn, gi){ for (var q = 0; q < gn; q++) items.push({ n: pos++ }); items.push({ bar: true, dbl: gi === cy.groups.length - 1 }); });
+    var wd = items.map(function(it){ return it.bar ? (it.dbl ? 16 : 10) : 31; }), tot = wd.reduce(function(a, b){ return a + b; }, 0), x = R.x + (R.w - tot) / 2;
+    items.forEach(function(it, ix){
+      if (it.bar) txt(it.dbl ? '||' : '|', x + wd[ix] / 2, y, 22, 'rgba(142,152,214,.7)', 'center', 500);
+      else {
+        var on = st.on && st.n === it.n, done = st.done || st.n > it.n, s = SEQ[it.n];
+        if (on) {
+          var sc = 1 + .12 * Math.sin(st.f * Math.PI); g.save(); g.translate(x + 15.5, y); g.scale(sc, sc);
+          g.fillStyle = col(s.i); g.shadowColor = col(s.i); g.shadowBlur = 14; rr(-14, -21, 28, 42, 9); g.fill(); g.shadowBlur = 0;
+          txt(lab(s.i), 0, 1, tl(21), '#0a0e2a', 'center', 800, telugu); g.restore();
+        } else txt(s.rep ? '·' : lab(s.i), x + 15.5, y, s.rep ? 20 : tl(19), done ? '#e9ebff' : 'rgba(142,152,214,.6)', 'center', 700, telugu && !s.rep);
+      }
+      x += wd[ix];
+    });
+  });
+}
+
+/* ---------- C. big note ---------- */
+function sC(st, R){
+  var n = st.n, i = SEQ[n].i, cc = col(i), size = Math.min(150, R.h * 0.62), s = 1 + .1 * Math.sin(Math.min(st.f * 2, 1) * Math.PI);
+  var cy = R.y + R.h * 0.40;
+  var gr = g.createRadialGradient(W / 2, cy, 8, W / 2, cy, 150); gr.addColorStop(0, cc); gr.addColorStop(1, 'rgba(10,14,42,0)');
+  g.globalAlpha = st.on ? .5 * (1 - .5 * st.f) : .2; g.fillStyle = gr; g.fillRect(R.x, R.y, R.w, R.h); g.globalAlpha = 1;
+  g.save(); g.translate(W / 2, cy); g.scale(s, s); txt(lab(i), 0, 0, tl(size), cc, 'center', 800, telugu); g.restore();
+  txt('Next', R.x + 10, R.y + R.h - 44, 9, MUTE, 'left', 600);
+  for (var k = 1; k <= 7; k++) {
+    var m = n + k; if (m >= SEQ.length) break; var x = R.x + 44 + (k - 1) * 40;
+    g.fillStyle = col(SEQ[m].i); g.globalAlpha = 1 - k * .1; rr(x - 17, R.y + R.h - 36, 34, 34, 8); g.fill(); g.globalAlpha = 1;
+    txt(lab(SEQ[m].i), x, R.y + R.h - 18, tl(15), '#0a0e2a', 'center', 800, telugu);
+  }
+}
+
+/* ---------- D. falling notes ---------- */
+function sD(st, R){
+  var lw = R.w / 8, hitY = R.y + R.h - 52, keyH = 42, nbRaw = st.pre ? 0 : (st.done ? SEQ.length / NPB : st.nb), nf = nbRaw * NPB;
+  for (var i = 0; i < 8; i++) { g.fillStyle = 'rgba(142,152,214,.07)'; g.fillRect(R.x + i * lw + 1, R.y, lw - 2, hitY - R.y + keyH + 8); }
+  g.strokeStyle = 'rgba(223,227,255,.35)'; g.lineWidth = 1.2; g.beginPath(); g.moveTo(R.x, hitY); g.lineTo(R.x + R.w, hitY); g.stroke();
+  var bh = NOTE_PX - 6;
+  for (var n = 0; n < SEQ.length; n++) {
+    var bottom = hitY - (n - nf) * NOTE_PX, i2 = SEQ[n].i, top = bottom - bh;
+    if (bottom < R.y + 2 || top > hitY + 8) continue;
+    var past = bottom > hitY, a = past ? Math.max(0, 1 - (bottom - hitY) / 40) : Math.min(1, (bottom - R.y) / 40);
+    var t2 = Math.max(top, R.y), b2 = Math.min(bottom, hitY + 40);
+    if (b2 <= t2) continue;
+    g.globalAlpha = Math.max(a, 0); g.fillStyle = col(i2); g.shadowColor = col(i2); g.shadowBlur = past ? 0 : 8;
+    rr(R.x + i2 * lw + 3, t2, lw - 6, b2 - t2, 7); g.fill(); g.shadowBlur = 0;
+    if (top > R.y && bh > 16) txt(lab(i2), R.x + i2 * lw + lw / 2, (top + bottom) / 2, tl(14), '#0a0e2a', 'center', 800, telugu);
+    g.globalAlpha = 1;
+  }
+  for (var k = 0; k < 8; k++) {
+    var on = st.on && SEQ[st.n].i === k, press = on ? Math.sin(Math.min(st.f * 1.4, 1) * Math.PI) * 4 : 0;
+    g.fillStyle = on ? col(k) : '#e9ebff'; g.globalAlpha = on ? 1 : .88; if (on) { g.shadowColor = col(k); g.shadowBlur = 16; }
+    rr(R.x + k * lw + 2, hitY + 6 + press, lw - 4, keyH, 6); g.fill(); g.shadowBlur = 0; g.globalAlpha = 1;
+    txt(lab(k), R.x + k * lw + lw / 2, hitY + 6 + keyH / 2 + 8 + press, tl(15), '#0a0e2a', 'center', 800, telugu);
+  }
+}
+
+/* ---------- E. pitch trail ---------- */
+function sE(st, R){
+  var top = R.y + 12, bot = R.y + R.h - 12, px = 52, hx = R.x + 100, nbRaw = st.pre ? 0 : (st.done ? SEQ.length / NPB : st.nb), nf = nbRaw * NPB;
+  function yFor(i){ return bot - (bot - top) * i / 7; }
+  for (var i = 0; i < 8; i++) { g.strokeStyle = col(i); g.globalAlpha = .22; g.lineWidth = 1; g.beginPath(); g.moveTo(R.x + 22, yFor(i)); g.lineTo(R.x + R.w, yFor(i)); g.stroke(); g.globalAlpha = 1; txt(lab(i), R.x + 8, yFor(i), tl(11), col(i), 'center', 700, telugu); }
+  function xFor(n){ return hx + (n + 0.5 - nf) * px; }
+  g.lineJoin = 'round'; g.lineCap = 'round';
+  for (var n = 0; n < SEQ.length; n++) {
+    var x = xFor(n), y = yFor(SEQ[n].i); if (x < R.x - 40 || x > R.x + R.w + 40) continue;
+    if (n < SEQ.length - 1) { var x2 = xFor(n + 1), y2 = yFor(SEQ[n + 1].i); g.strokeStyle = col(SEQ[n].i); g.globalAlpha = .45; g.lineWidth = 1.6; g.beginPath(); g.moveTo(x + 15, y); g.lineTo(x2 - 15, y2); g.stroke(); g.globalAlpha = 1; }
+    var on = st.on && n === st.n, past = n < st.n || st.done;
+    g.fillStyle = col(SEQ[n].i); g.globalAlpha = on ? 1 : (past ? .4 : .85); if (on) { g.shadowColor = col(SEQ[n].i); g.shadowBlur = 14; }
+    rr(x - 15, y - 8, 30, 16, 8); g.fill(); g.shadowBlur = 0; g.globalAlpha = 1;
+    if (!past || on) txt(lab(SEQ[n].i), x, y + 0.5, tl(10.5), '#0a0e2a', 'center', 800, telugu);
+  }
+  g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 1.2; g.setLineDash([4, 5]); g.beginPath(); g.moveTo(hx, R.y); g.lineTo(hx, R.y + R.h); g.stroke(); g.setLineDash([]);
+  txt(lab(SEQ[st.n].i), R.x + R.w - 36, R.y + 28, tl(34), col(SEQ[st.n].i), 'center', 800, telugu);
+}
+
+/* ---------- F. needle gauge ---------- */
+function sF(st, R){
+  var cx = W / 2, R0 = Math.min(120, R.h - 66), cy = R.y + R.h - 26;
+  function th(i){ return Math.PI - i * Math.PI / 7; }
+  for (var i = 0; i < 8; i++) {
+    var a0 = th(i) + Math.PI / 14, a1 = th(i) - Math.PI / 14, on = st.on && SEQ[st.n].i === i;
+    g.strokeStyle = col(i); g.globalAlpha = on ? 1 : .4; g.lineWidth = on ? 22 : 15; g.lineCap = 'butt'; if (on) { g.shadowColor = col(i); g.shadowBlur = 14; }
+    g.beginPath(); g.arc(cx, cy, R0, -a0, -a1, false); g.stroke(); g.shadowBlur = 0; g.globalAlpha = 1;
+    txt(lab(i), cx + Math.cos(th(i)) * (R0 + 28), cy - Math.sin(th(i)) * (R0 + 28), tl(on ? 18 : 14), on ? col(i) : 'rgba(223,227,255,.7)', 'center', 800, telugu);
+  }
+  var n = st.n, ip = n > 0 ? SEQ[n - 1].i : SEQ[n].i, gl = 1 - Math.pow(1 - Math.min(st.f * 2.4, 1), 3), a = th(ip) + (th(SEQ[n].i) - th(ip)) * (st.on ? gl : 1);
+  g.strokeStyle = '#fff'; g.lineWidth = 3.5; g.lineCap = 'round'; g.shadowColor = col(SEQ[n].i); g.shadowBlur = 12;
+  g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.cos(a) * (R0 - 8), cy - Math.sin(a) * (R0 - 8)); g.stroke(); g.shadowBlur = 0;
+  g.fillStyle = '#fff'; g.beginPath(); g.arc(cx, cy, 8, 0, 7); g.fill(); g.fillStyle = col(SEQ[n].i); g.beginPath(); g.arc(cx, cy, 4, 0, 7); g.fill();
+  txt(lab(SEQ[n].i), cx, cy - R0 * 0.42, tl(48), col(SEQ[n].i), 'center', 800, telugu);
+}
+
+/* ---------- G. pad grid ---------- */
+function sG(st, R){
+  var gx = 8, gy = 8, pw = (R.w - 3 * gx) / 4, ph = (R.h - 30 - gy) / 2;
+  for (var i = 0; i < 8; i++) {
+    var px = R.x + (i % 4) * (pw + gx), py = R.y + Math.floor(i / 4) * (ph + gy), age = -1;
+    for (var k = 0; k <= 3; k++) { var m = st.n - k; if (st.on && m >= 0 && SEQ[m].i === i) { age = k; break; } }
+    var on = st.on && age === 0, glow = age < 0 ? 0 : (age === 0 ? 1 : (1 - age / 4) * .55);
+    g.save(); var s = on ? 1 + .06 * Math.sin(Math.min(st.f * 2, 1) * Math.PI) : 1; g.translate(px + pw / 2, py + ph / 2); g.scale(s, s);
+    g.fillStyle = 'rgba(142,152,214,.12)'; rr(-pw / 2, -ph / 2, pw, ph, 12); g.fill();
+    g.globalAlpha = .12 + .88 * glow; g.fillStyle = col(i); if (glow > .5) { g.shadowColor = col(i); g.shadowBlur = 18; }
+    rr(-pw / 2, -ph / 2, pw, ph, 12); g.fill(); g.shadowBlur = 0; g.globalAlpha = 1;
+    txt(lab(i), 0, 1, tl(34), glow > .3 ? '#0a0e2a' : col(i), 'center', 800, telugu); g.restore();
+  }
+  var N = SEQ.length, sp = Math.min(14, (R.w - 20) / N), x0 = W / 2 - sp * (N - 1) / 2, y = R.y + R.h - 8;
+  for (var d = 0; d < N; d++) { g.fillStyle = (st.on && d === st.n) ? col(SEQ[d].i) : ((d < st.n || st.done) ? 'rgba(223,227,255,.55)' : 'rgba(142,152,214,.25)'); g.beginPath(); g.arc(x0 + d * sp, y, (st.on && d === st.n) ? 4 : 2.8, 0, 7); g.fill(); }
+}
+
+/* ---------- H. arc bridges ---------- */
+function sH(st, R){
+  var base = R.y + R.h / 2, xs = function(i){ return R.x + 22 + i * ((R.w - 44) / 7); }, r = 13, kk = Math.min(1, (R.h / 2 - 26) / (7 * ((R.w - 44) / 7) / 2));
+  function arc(x0, x1, sign, prog, color){
+    var cxm = (x0 + x1) / 2, rad = Math.abs(x1 - x0) / 2; if (rad < 1) return;
+    g.strokeStyle = color; g.globalAlpha = .85; g.lineWidth = 2.6; g.lineCap = 'round'; g.shadowColor = color; g.shadowBlur = 6; g.beginPath();
+    var steps = Math.max(2, Math.round(28 * prog));
+    for (var s = 0; s <= steps; s++) { var u = prog * s / steps, xx = cxm + (x0 - cxm) * Math.cos(u * Math.PI), yy = base - sign * rad * kk * Math.sin(u * Math.PI); if (s === 0) g.moveTo(xx, yy); else g.lineTo(xx, yy); }
+    g.stroke(); g.shadowBlur = 0; g.globalAlpha = 1;
+  }
+  txt('Going up', W / 2, R.y + 8, 9.5, VIO, 'center', 700); txt('Coming down', W / 2, R.y + R.h - 6, 9.5, TEAL, 'center', 700);
+  g.strokeStyle = 'rgba(142,152,214,.3)'; g.lineWidth = 1; g.beginPath(); g.moveTo(R.x + 4, base); g.lineTo(R.x + R.w - 4, base); g.stroke();
+  var half = SEQ.length / 2, last = st.done ? SEQ.length - 1 : st.n;
+  if (!st.pre) for (var m = 1; m <= last; m++) {
+    var a = SEQ[m - 1].i, b = SEQ[m].i; if (a === b) continue;
+    var f = (m === st.n && st.on) ? Math.min(st.f * 1.8, 1) : 1, sign = m < half ? 1 : -1;
+    arc(xs(a), xs(b), sign, f, m < half ? VIO : TEAL);
+  }
+  for (var i = 0; i < 8; i++) {
+    var on = st.on && SEQ[st.n].i === i, x = xs(i);
+    g.fillStyle = col(i); g.globalAlpha = on ? 1 : .75; if (on) { g.shadowColor = col(i); g.shadowBlur = 16; }
+    g.beginPath(); g.arc(x, base, on ? r + 3 : r, 0, 7); g.fill(); g.shadowBlur = 0; g.globalAlpha = 1;
+    txt(lab(i), x, base + 1, tl(on ? 16 : 13), '#0a0e2a', 'center', 800, telugu);
+  }
+}
+
+var STYLES = { staircase: sB, karaoke: sA, bignote: sC, falling: sD, pitchtrail: sE, gauge: sF, pads: sG, arcs: sH };
+
+window.renderFrame = function(t){
+  pickPart(t);
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  if (CFG.transparent) { g.clearRect(0, 0, g.canvas.width, g.canvas.height); g.setTransform(S, 0, 0, S, 0, 0); }
+  else {
+    g.setTransform(S, 0, 0, S, 0, 0);
+    var gr = g.createLinearGradient(0, 0, 0, CH); gr.addColorStop(0, '#0A0E2A'); gr.addColorStop(1, '#101650');
+    g.fillStyle = gr; g.fillRect(0, 0, W, CH);
+  }
+  var st = state(t); header(st);
+  var R = { x: 10, y: 80, w: 340, h: H - 80 - 30 };
+  (STYLES[PARTS[PI].style || CFG.style] || sB)(st, R);
+  return document.getElementById('cv').toDataURL('image/png').slice(22);
+};
+</script></body></html>

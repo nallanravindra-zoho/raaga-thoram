@@ -1,0 +1,89 @@
+SARALI VARISAI (SARALI SWARAMULU) FOR KALYANI RAGAM
+============================================================
+
+Raga: Kalyani (Mechakalyani, the 65th melakarta)
+Scale going up:   S R2 G3 M2 P D2 N3 Ś
+Scale coming down: Ś N3 D2 P M2 G3 R2 S
+In Kalyani the Ma is the sharp one (prati madhyamam). It is written as plain M below,
+exactly as on your sheet, which was for Mayamalavagowla / Shankarabharanam.
+Only the Ma changes when these exercises are sung in Kalyani.
+
+HOW TO READ
+  S R G M P D N   the seven notes;   Ś = the high Sa
+  ,               hold the note before it for one more beat
+  |               a break between parts of the tala
+  ||              the end of one cycle (avartanam) of 8 beats
+Tala: Adi talam = laghu (4 beats) + drutam (2) + drutam (2) = 8 beats.
+Each line below is 16 beats = 2 cycles.
+
+SPEEDS (the beat tempo stays the same)
+  Speed 1: 1 note per beat
+  Speed 2: 2 notes per beat (the same notes twice as fast)
+  Speed 3: 4 notes per beat
+  The comma means a repeat of previous known note
+
+SOURCE: typed from the photo of your sheet. Items marked [CHECK] were hard to read.
+============================================================
+
+1.
+  up+down  S R G M | P D | N Ś || Ś N D P | M G | R S ||
+           స రి గ మ | ప ద | ని స̇ || స̇ ని ద ప | మ గ | రి స
+
+2.
+  up       S R G M | S R | G M || S R G M | P D | N Ś ||
+           స రి గ మ | స రి | గ మ || స రి గ మ | ప ద | ని స̇
+  down     Ś N D P | Ś N | D P || Ś N D P | M G | R S ||
+           స̇ ని ద ప | స̇ ని | ద ప || స̇ ని ద ప | మ గ | రి స
+
+3.
+  up       S R G M | S R | S R || S R G M | P D | N Ś ||
+           స రి గ మ | స రి | స రి || స రి గ మ | ప ద | ని స̇
+  down     Ś N D P | Ś N | Ś N || Ś N D P | M G | R S ||
+           స̇ ని ద ప | స̇ ని | స̇ ని || స̇ ని ద ప | మ గ | రి స
+
+4.
+  up       S R G M | P M | G R || S R G M | P D | N Ś ||
+           స రి గ మ | ప మ | గ రి || స రి గ మ | ప ద | ని స̇
+  down     Ś N D P | M P | D N || Ś N D P | M G | R S ||
+           స̇ ని ద ప | మ ప | ద ని || స̇ ని ద ప | మ గ | రి స
+
+5.
+  up       S R G M | S M | G R || S R G M | P D | N Ś ||
+           స రి గ మ | స మ | గ రి || స రి గ మ | ప ద | ని స̇
+  down     Ś N D P | Ś P | D N || Ś N D P | M G | R S ||
+           స̇ ని ద ప | స̇ ప | ద ని || స̇ ని ద ప | మ గ | రి స
+
+6.
+  up       S R G M | P M | D P || S R G M | P D | N Ś ||
+           స రి గ మ | ప మ | ద ప || స రి గ మ | ప ద | ని స̇
+  down     Ś N D P | M P | G M || Ś N D P | M G | R S ||
+           స̇ ని ద ప | మ ప | గ మ || స̇ ని ద ప | మ గ | రి స
+
+7.
+  up       S R G M | P , | P , || S R G M | P D | N Ś ||
+           స రి గ మ | ప , | ప , || స రి గ మ | ప ద | ని స̇
+  down     Ś N D P | M , | M , || Ś N D P | M G | R S ||
+           స̇ ని ద ప | మ , | మ , || స̇ ని ద ప | మ గ | రి స
+
+8.
+  line 1   S R G M | P , | G M || P , , , | P , | , , ||
+           స రి గ మ | ప , | గ మ || ప , , , | ప , | , ,
+  line 2   G M P D | N D | P M || G M P G | M G | R S ||
+           గ మ ప ద | ని ద | ప మ || గ మ ప గ | మ గ | రి స
+  line 3   Ś , N D | N , | D P || D , P M | P , | P ,  ||
+           స̇ , ని ద | ని , | ద ప || ద , ప మ | ప , | ప ,
+  line 4   G M P D | N D | P M || G M P G | M G | R S ||
+           గ మ ప ద | ని ద | ప మ || గ మ ప గ | మ గ | రి స
+9.
+  up       S R G M | P , | S R || S R G M | P D | N Ś ||
+           స రి గ మ | ప , | స రి || స రి గ మ | ప ద | ని స̇
+  down     Ś N D P | M , | Ś N || Ś N D P | M G | R S ||
+           స̇ ని ద ప | మ , | స̇ ని || స̇ ని ద ప | మ గ | రి స
+
+10.
+  up       S R G S | R G S R || S R G M | P D N Ś ||
+           స రి గ స | రి గ స రి || స రి గ మ | ప ద ని స̇
+  down     Ś N D Ś | N D Ś N || Ś N D P | M G R S ||
+           స̇ ని ద స̇ | ని ద స̇ ని || స̇ ని ద ప | మ గ రి స
+
+============================================================
