@@ -19,3 +19,4 @@ content/tabla_loop/*.wav
 content/tabla_loop/samples/*
 !content/tabla_loop/samples/README.txt
 tools/bin/
+content/reference/
