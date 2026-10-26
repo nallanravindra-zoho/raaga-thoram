@@ -1,10 +1,13 @@
 {
   "_help": "Copy this file into a new folder under episodes/, next to master.wav and the cousins' clips. Delete lines you don't need.",
-
   "master": "master.mp3",
-  "cousins": ["cousins.mp4"],
-  "cousin_names": ["Soujanya", "Soumya"],
-
+  "cousins": [
+    "cousins.mp4"
+  ],
+  "cousin_names": [
+    "Soujanya",
+    "Soumya"
+  ],
   "exercise": 3,
   "speed": 1,
   "bpm": 35,
@@ -13,18 +16,33 @@
   "follow_tolerance": 0.03,
   "_follow_tolerance_help": "seconds the animation may drift from her singing before it is re-synced. Smaller = follows her more closely, larger = smoother",
   "_follow_lag_help": "seconds. More negative = animation earlier, closer to 0 or positive = later. Try steps of 0.05 to 0.1",
-  "pattern_start": 9.0,
+  "pattern_start": 9,
   "parts": [
-  {"speed": 1, "pattern_start": 9.0, "style": "staircase"},
-  {"speed": 2, "pattern_start": 80.0, "style": "karaoke"},
-  {"speed": 3, "pattern_start": 103.0, "style": "bignote"}
-],
+    {
+      "speed": 1,
+      "pattern_start": 9,
+      "style": "staircase"
+    },
+    {
+      "speed": 2,
+      "pattern_start": 80,
+      "style": "karaoke"
+    },
+    {
+      "speed": 3,
+      "pattern_start": 103,
+      "style": "bignote"
+    }
+  ],
   "style": "staircase",
   "_style_options": "staircase, karaoke, bignote, falling, pitchtrail, gauge, pads, arcs",
   "script": "latin",
   "_script_options": "latin or telugu",
   "intro": true,
-  "intro_title": ["Ajanta", "Raaga Thoram"],
+  "intro_title": [
+    "Ajanta",
+    "Raaga Thoram"
+  ],
   "_intro_title_help": "each item is one line of the opening title. Use one item for a single line",
   "intro_theme": "purple",
   "_intro_theme_options": "gold, purple, silver, rosegold, emerald, ice, crimson",
@@ -35,5 +53,9 @@
   "animation_fraction": 0.45,
   "face_focus": 0.3,
   "count_in_beats": 0,
-  "hashtags": "#carnatic #carnaticmusic #saralivarisai #learnmusic #swaram"
+  "hashtags": "#carnatic #carnaticmusic #saralivarisai #learnmusic #swaram",
+  "show_variants": true,
+  "bg_shift": 0.3,
+  "follow_mode": "auto",
+  "intro_transition_seconds": 0.8
 }

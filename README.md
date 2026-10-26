@@ -114,6 +114,21 @@ Record the cousins with the head near the top of the frame and the body down to 
   Each part gets its own voice-following. The animation title shows "Speed 1/2/3" and switches to the next part about
   3 s before it begins.
 
+## Settings page (no need to edit JSON)
+
+```bash
+cd raaga-thoram
+.venv/bin/python settings.py
+```
+
+This opens http://127.0.0.1:8765 in your browser (it only listens on your own computer). Pick an episode at the top, change the
+settings in the form, and press **Save**. The same page has **Check**, **Preview** and **Build final video** buttons that run the tool
+and show the progress underneath. **+ New** makes a new episode folder from the template; put the master audio and the cousin video
+in it, then reload the page.
+
+It shows only the settings you change often: files, exercise and raga, the speeds and their animations, the look, how closely the
+animation follows her singing, the opening title (lines, colour, change-over), and hashtags. Rarely needed ones are under Advanced.
+
 ## The intro title
 
 The video starts with a title that sparkles in. It is set in `episode.json` (or the default):
