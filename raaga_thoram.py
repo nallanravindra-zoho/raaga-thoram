@@ -84,12 +84,29 @@ def load_raga(name):
     return (v, None) if v else (None, None)
 
 
+def raga_swaram_file(name):
+    """The exercise file linked to a raga in content/ragas.json (for ragas that skip notes), or None."""
+    try:
+        lib = json.load(open(HERE / "content" / "ragas.json", encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    key = re.sub(r"\s+", "", name or "").lower()
+    for k, v in lib.items():
+        if not k.startswith("_") and re.sub(r"\s+", "", k).lower() == key and v.get("swaram_file"):
+            p = HERE / "content" / v["swaram_file"]
+            return str(p) if p.exists() else None
+    return None
+
+
 def load_settings(ep_dir):
     p = ep_dir / "episode.json"
     if not p.exists():
         sys.exit(f"No episode.json in {ep_dir}. Copy episodes/_template/episode.json there and edit it.")
     s = dict(DEFAULTS)
-    s.update({k: v for k, v in json.load(open(p)).items() if not k.startswith("_")})
+    raw = json.load(open(p))
+    s.update({k: v for k, v in raw.items() if not k.startswith("_")})
+    if "swaram_file" not in raw:                       # a raga with its own exercises uses them
+        s["swaram_file"] = raga_swaram_file(s["raga"]) or s["swaram_file"]
     if s["style"] not in STYLES:
         sys.exit(f'style "{s["style"]}" is not one of: {", ".join(STYLES)}')
     if s["speed"] not in NPB:

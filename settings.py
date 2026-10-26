@@ -68,8 +68,16 @@ def save_ragas(data):
     return clean
 
 
-def exercise(n):
-    return swarams.exercise(rt.DEFAULTS["swaram_file"], int(n))
+def swaram_file(raga):
+    return rt.raga_swaram_file(raga) or rt.DEFAULTS["swaram_file"]
+
+
+def exercise(n, raga=None):
+    return swarams.exercise(swaram_file(raga), int(n))
+
+
+def exercise_numbers(raga=None):
+    return sorted(swarams.parse_file(swaram_file(raga)))
 
 
 STILL_LOCK = threading.Lock()
@@ -188,7 +196,7 @@ def look_previews(ep, frac, shift, style, script, raga, speed):
         y = round((im.height - h) * focus)
         return im.crop((x, y, x + w, y + h))
 
-    ex = exercise(cfgj.get("exercise", 1))
+    ex = exercise(cfgj.get("exercise", 1), raga)
     lib = read_ragas()
     key = re.sub(r"\s+", "", raga or "").lower()
     notes = next((v["notes"] for k, v in lib.items() if not k.startswith("_") and re.sub(r"\s+", "", k).lower() == key), None)
@@ -404,7 +412,9 @@ class Handler(BaseHTTPRequestHandler):
                 p = (ep_dir(name) / "out" / Path(rest).name)
                 self.send_file(p, "video/mp4" if p.suffix == ".mp4" else ("image/png" if p.suffix == ".png" else "text/plain; charset=utf-8"))
             elif u.path == "/api/exercise":
-                self.send(exercise(q.get("n", 1)))
+                self.send(exercise(q.get("n", 1), q.get("raga")))
+            elif u.path == "/api/exercises":
+                self.send({"numbers": exercise_numbers(q.get("raga"))})
             elif u.path == "/api/ragas":
                 self.send(read_ragas())
             elif u.path == "/api/transition":

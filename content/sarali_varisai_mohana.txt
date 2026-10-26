@@ -1,0 +1,41 @@
+SARALI VARISAI FOR MOHANA RAGAM (derived from the Kalyani exercises)
+============================================================
+
+Raga: Mohana
+Scale going up:    S R2 G3 P D2 Ś
+Scale coming down: Ś D2 P G3 R2 S
+Mohana has no M, N. Wherever an exercise has one of those notes, the note before it is held
+(a comma) so the rhythm, the 8-beat cycles and the speeds stay the same.
+These exercises are DERIVED, not copied from a teacher's sheet: please have them checked.
+
+HOW TO READ
+  S R G P D   the notes;   Ś = the high Sa
+  ,   hold the note before it for one more beat
+  |   a break between parts of the tala
+  ||  the end of one cycle (avartanam) of 8 beats
+Tala: Adi talam = laghu (4 beats) + drutam (2) + drutam (2) = 8 beats.
+Each line is 16 beats = 2 cycles.
+Speeds: 1 note per beat, 2 per beat, 4 per beat (the beat tempo stays the same).
+============================================================
+
+1.
+  up+down  S R G , | P D | , Ś || Ś , D P | , G | R S ||
+           స రి గ , | ప ద | , స̇ || స̇ , ద ప | , గ | రి స
+
+2.
+  up       S R G , | S R | G , || S R G , | P D | , Ś ||
+           స రి గ , | స రి | గ , || స రి గ , | ప ద | , స̇
+  down     Ś , D P | Ś , | D P || Ś , D P | , G | R S ||
+           స̇ , ద ప | స̇ , | ద ప || స̇ , ద ప | , గ | రి స
+
+3.
+  up       S R G , | S R | S R || S R G , | P D | , Ś ||
+           స రి గ , | స రి | స రి || స రి గ , | ప ద | , స̇
+  down     Ś , D P | Ś , | Ś , || Ś , D P | , G | R S ||
+           స̇ , ద ప | స̇ , | స̇ , || స̇ , ద ప | , గ | రి స
+
+4.
+  up       S R G , | P , | G R || S R G , | P D | , Ś ||
+           స రి గ , | ప , | గ రి || స రి గ , | ప ద | , స̇
+  down     Ś , D P | , P | D , || Ś , D P | , G | R S ||
+           స̇ , ద ప | , ప | ద , || స̇ , ద ప | , గ | రి స

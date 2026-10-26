@@ -365,7 +365,8 @@ async function drawExercise(){
 }
 
 /* ---------- live animation previews ---------- */
-async function getEx(n){ if (!exCache[n]) exCache[n] = await api('/api/exercise?n=' + n); return exCache[n]; }
+async function getEx(n){ const k = ($('raga').value || '') + '|' + n; if (!exCache[k]) exCache[k] = await api('/api/exercise?n=' + n + '&raga=' + encodeURIComponent($('raga').value || '')); return exCache[k]; }
+async function fillExercises(want){ try { const r = await api('/api/exercises?raga=' + encodeURIComponent($('raga').value || '')); const cur = want || $('exercise').value; fillSelect($('exercise'), r.numbers.map(String), r.numbers.map(String).includes(String(cur)) ? String(cur) : String(r.numbers[0])); } catch (e) {} }
 function stopAnims(){ anims.forEach(a => { clearInterval(a.timer); a.obs && a.obs.disconnect(); }); anims = []; }
 async function mkPreview(box, style, speed, w){
   const ex = await getEx($('exercise').value || 1), npb = {1: 1, 2: 2, 3: 4}[speed] || 1, bpm = 100;
@@ -482,8 +483,7 @@ async function load(){
   fillSelect($('master'), auds.length ? auds : files, val('master', ''));
   fillSelect($('cousin1'), vids.length ? vids : files, (cfg.cousins || [])[0] || '', '(none)');
   $('names').value = (cfg.cousin_names || []).join(', ');
-  fillSelect($('exercise'), Array.from({length: 10}, (_, i) => String(i + 1)), String(val('exercise', 1)));
-  ragas = await api('/api/ragas'); fillRagas(val('raga', 'Kalyani')); drawRagaTable();
+  ragas = await api('/api/ragas'); fillRagas(val('raga', 'Kalyani')); drawRagaTable(); exCache = {}; await fillExercises(String(val('exercise', 1)));
   script = val('script', 'latin'); $('showVariants').checked = val('show_variants', true); drawLetters();
   parts = (cfg.parts && cfg.parts.length ? cfg.parts : [{speed: val('speed', 1), pattern_start: val('pattern_start', 0), style: val('style', 'staircase')}])
     .map(p => ({speed: p.speed || 1, style: p.style || val('style', 'staircase'), start: p.pattern_start !== undefined ? p.pattern_start : 0, _extra: p}));
@@ -552,7 +552,7 @@ async function init(){
         intro_transition: trans, intro_transition_seconds: parseFloat($('transSecs').value)}});
       const v = $('introVid'); v.src = r.url + '?t=' + Date.now(); v.classList.remove('hidden'); v.play().catch(() => {}); $('introMsg').textContent = 'Change the colour, lines or change-over and press the button again to see the new one.'; }
     catch (e) { $('introMsg').textContent = 'Could not make it: ' + e.message; } b.disabled = false; };
-  $('raga').addEventListener('input', () => { drawScale(); refreshAnims(); refreshLooks(); drawExercise(); });
+  $('raga').addEventListener('input', async () => { exCache = {}; await fillExercises(); drawScale(); refreshAnims(); refreshLooks(); drawExercise(); summary(); });
   $('showVariants').addEventListener('input', () => { drawScale(); refreshAnims(); drawExercise(); });
   $('exercise').addEventListener('input', () => { exCache = {}; refreshAnims(); drawExercise(); });
   $('exInfo').onclick = e => { e.preventDefault(); $('exPop').classList.toggle('hidden'); };
