@@ -4,284 +4,391 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Raaga Thoram · Episode settings</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+Telugu:wght@500;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#f5f3fb; --card:#ffffff; --ink:#1d1a2e; --mute:#6c6785; --line:#e4e0f2; --accent:#7c4dff; --accent2:#2fb8b0;
-  --accent-ink:#ffffff; --field:#faf9fe; --good:#1f9d6b; --bad:#d6455d; --shadow:0 1px 2px rgba(40,20,90,.06),0 6px 24px rgba(40,20,90,.06);
+  --bg:#f4f2fb; --card:#fff; --ink:#1d1a2e; --mute:#6c6785; --line:#e4e0f2; --accent:#7c4dff; --accent2:#2fb8b0;
+  --field:#faf9fe; --good:#1f9d6b; --bad:#d6455d; --warn:#c07a00; --shadow:0 1px 2px rgba(40,20,90,.06),0 8px 28px rgba(40,20,90,.07);
 }
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --bg:#0f0d1c; --card:#181530; --ink:#ece9fa; --mute:#9d98bb; --line:#2b2750; --accent:#9a78ff; --accent2:#4fd1c5;
-    --field:#120f26; --good:#43d19e; --bad:#ff7d92; --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 24px rgba(0,0,0,.35);
-  }
-}
-:root[data-theme="dark"]{
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0f0d1c; --card:#181530; --ink:#ece9fa; --mute:#9d98bb; --line:#2b2750; --accent:#9a78ff; --accent2:#4fd1c5;
-  --field:#120f26; --good:#43d19e; --bad:#ff7d92; --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 24px rgba(0,0,0,.35);
-}
+  --field:#120f26; --good:#43d19e; --bad:#ff7d92; --warn:#f0b14a; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 28px rgba(0,0,0,.35);}}
+:root[data-theme="dark"]{--bg:#0f0d1c; --card:#181530; --ink:#ece9fa; --mute:#9d98bb; --line:#2b2750; --accent:#9a78ff; --accent2:#4fd1c5;
+  --field:#120f26; --good:#43d19e; --bad:#ff7d92; --warn:#f0b14a; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 28px rgba(0,0,0,.35);}
 *{box-sizing:border-box}
 html,body{margin:0}
-body{background:var(--bg);color:var(--ink);font:15px/1.5 Manrope,system-ui,-apple-system,"Segoe UI",sans-serif;padding-bottom:210px}
-header{background:linear-gradient(120deg,#3a1d8f,#7c4dff 55%,#2fb8b0);color:#fff;padding:26px 20px 70px}
-.wrap{max-width:980px;margin:0 auto;padding:0 16px}
-.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-.mark{width:46px;height:46px;border-radius:14px;background:rgba(255,255,255,.18);display:grid;place-items:center;font-size:24px}
-h1{margin:0;font-size:26px;font-weight:800;letter-spacing:.2px}
-.sub{opacity:.9;font-size:14px}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 Manrope,system-ui,-apple-system,"Segoe UI",sans-serif}
+header{background:linear-gradient(120deg,#3a1d8f,#7c4dff 55%,#2fb8b0);color:#fff;padding:22px 20px 26px}
+.top{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.mark{width:48px;height:48px;border-radius:14px;background:rgba(255,255,255,.2);display:grid;place-items:center;font-size:25px}
+h1{margin:0;font-size:27px;font-weight:800}
+.sub{opacity:.92;font-size:14px}
 .title-live{font-family:"Cinzel Decorative",serif;font-weight:700;letter-spacing:1px}
 .ep-pick{margin-left:auto;display:flex;gap:8px;align-items:center}
-main{margin-top:-46px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:20px 22px;margin-bottom:16px}
-.card h2{margin:0 0 4px;font-size:17px;font-weight:800}
-.card .hint{color:var(--mute);font-size:13.5px;margin:0 0 14px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.ep-pick select{color:#1d1a2e;min-width:130px}
+.layout{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:210px 1fr;gap:22px;padding:18px 16px 80px}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.steps{position:static!important;flex-direction:row;overflow:auto}}
+.steps{position:sticky;top:14px;align-self:start;display:flex;flex-direction:column;gap:4px}
+.steps a{display:flex;gap:10px;align-items:center;padding:9px 12px;border-radius:12px;text-decoration:none;color:var(--mute);font-weight:700;font-size:14px;white-space:nowrap}
+.steps a b{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--field);border:1px solid var(--line);font-size:12px}
+.steps a:hover,.steps a.on{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+.steps a.on b{background:var(--accent);color:#fff;border-color:transparent}
+.summary{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 16px;margin-bottom:16px;box-shadow:var(--shadow);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--field);border:1px solid var(--line);font-size:13px;font-weight:700}
+.chip.good{color:var(--good);border-color:var(--good)} .chip.bad{color:var(--bad);border-color:var(--bad)} .chip.warn{color:var(--warn);border-color:var(--warn)}
+section.card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:20px 22px;margin-bottom:16px;scroll-margin-top:12px}
+section.card h2{margin:0;font-size:18px;font-weight:800;display:flex;gap:10px;align-items:center}
+section.card h2 .n{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-size:14px}
+.hint{color:var(--mute);font-size:13.5px;margin:4px 0 14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
 label.f{display:block;font-weight:600;font-size:13.5px}
-label.f span.l{display:block;margin-bottom:5px}
+label.f .l,.l{display:block;margin-bottom:5px;font-weight:600;font-size:13.5px}
 input[type=text],input[type=number],select,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:var(--field);color:var(--ink);font:inherit;outline:none}
 input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent)}
-textarea{min-height:64px;resize:vertical}
+textarea{min-height:60px;resize:vertical}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-button{font:inherit;font-weight:700;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:10px 16px;border-radius:12px;cursor:pointer}
+button{font:inherit;font-weight:700;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:10px 16px;border-radius:12px;cursor:pointer;white-space:nowrap}
 button:hover{border-color:var(--accent)}
 button.primary{background:linear-gradient(120deg,var(--accent),#5b34d6);color:#fff;border-color:transparent}
 button.teal{background:linear-gradient(120deg,var(--accent2),#1c8f88);color:#fff;border-color:transparent}
-button.small{padding:6px 10px;font-size:13px;border-radius:9px}
-button{white-space:nowrap}
+button.small{padding:6px 11px;font-size:13px;border-radius:9px}
 button:disabled{opacity:.5;cursor:not-allowed}
 .opt-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
 .opt{border:2px solid var(--line);border-radius:14px;padding:12px 14px;cursor:pointer;background:var(--field)}
-.opt b{display:block;font-size:14.5px}
-.opt small{color:var(--mute)}
+.opt b{display:block;font-size:14.5px} .opt small{color:var(--mute)}
 .opt.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--field))}
-.sp-row{display:grid;grid-template-columns:110px 1fr 150px auto;gap:10px;align-items:end;margin-bottom:10px}
-@media(max-width:640px){.sp-row{grid-template-columns:1fr 1fr}}
 .slider{display:flex;align-items:center;gap:12px}
 .slider input[type=range]{flex:1;accent-color:var(--accent)}
-.slider output{min-width:64px;text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+.slider output{min-width:80px;text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
 .switch{display:inline-flex;align-items:center;gap:10px;cursor:pointer;font-weight:700}
-.switch input{appearance:none;width:44px;height:26px;border-radius:99px;background:var(--line);position:relative;cursor:pointer;transition:.15s}
+.switch input{appearance:none;width:44px;height:26px;border-radius:99px;background:var(--line);position:relative;cursor:pointer;transition:.15s;flex:none}
 .switch input::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.15s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
-.switch input:checked{background:var(--accent)}
-.switch input:checked::after{left:21px}
+.switch input:checked{background:var(--accent)} .switch input:checked::after{left:21px}
 .swatches{display:flex;gap:10px;flex-wrap:wrap}
-.sw{width:44px;height:44px;border-radius:50%;border:3px solid transparent;cursor:pointer;outline:1px solid var(--line)}
+.sw{width:42px;height:42px;border-radius:50%;border:3px solid transparent;cursor:pointer;outline:1px solid var(--line)}
 .sw.on{border-color:var(--ink)}
-.preview-title{background:#000;border-radius:14px;padding:24px 12px;text-align:center;margin-top:14px;font-family:"Cinzel Decorative",serif;font-weight:700;font-size:30px;line-height:1.35;letter-spacing:1px;
-  -webkit-background-clip:padding-box}
+.preview-title{background:#000;border-radius:14px;padding:22px 12px;text-align:center;margin-top:14px;font-family:"Cinzel Decorative",serif;font-weight:700;font-size:30px;line-height:1.35;letter-spacing:1px}
 .preview-title span{display:block;background:var(--tg);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 10px var(--glow))}
-details.card summary{cursor:pointer;font-weight:800;font-size:16px}
-.bar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);box-shadow:0 -6px 24px rgba(40,20,90,.12);z-index:5}
-.bar .in{max-width:980px;margin:0 auto;padding:10px 16px}
-.log{background:#0b0919;color:#d8d3f5;border-radius:12px;padding:10px 12px;margin-top:10px;font:12.5px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;height:96px;overflow:auto;white-space:pre-wrap}
+.speeds{display:flex;flex-direction:column;gap:14px}
+.speed{display:grid;grid-template-columns:230px 1fr;gap:16px;align-items:center;border:1px solid var(--line);border-radius:16px;padding:12px;background:var(--field)}
+@media(max-width:700px){.speed{grid-template-columns:1fr}}
+.speed .ctl{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.speed .ctl .wide{grid-column:1/-1}
+.pv{position:relative;border-radius:12px;overflow:hidden;background:#0a0e2a;border:1px solid var(--line)}
+.pv iframe{border:0;position:absolute;left:0;top:0;transform-origin:0 0;pointer-events:none}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px;margin-top:6px}
+.tile{border:2px solid var(--line);border-radius:14px;padding:8px;cursor:pointer;background:var(--field);text-align:center}
+.tile:hover{border-color:var(--accent)} .tile.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--field))}
+.tile .pv{width:150px;margin:0 auto 6px}
+.speed .pv{width:270px;max-width:100%} .tile b{font-size:13.5px}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px}
+.tcard{border:2px solid var(--line);border-radius:14px;padding:6px;cursor:pointer;background:var(--field);text-align:center}
+.tcard.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--field))} .tcard:hover{border-color:var(--accent)}
+.tcard video{width:100%;border-radius:9px;display:block;background:#000;aspect-ratio:9/16;object-fit:cover}
+.tcard b{display:block;font-size:12.5px;margin-top:4px}
+.scale{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px}
+.note{display:inline-grid;place-items:center;min-width:46px;padding:6px 8px;border-radius:10px;background:var(--field);border:1px solid var(--line);font-weight:800;line-height:1.1;text-align:center}
+.note small{display:block;font-size:11px;font-weight:600;color:var(--mute)}
+.note.off{opacity:.28}
+.letters{display:flex;gap:10px;flex-wrap:wrap}
+.letters .opt{flex:1;min-width:150px;text-align:center}
+.letters .eg{font-size:24px;font-weight:800;margin-bottom:2px}
+.letters .eg small{display:block;font-size:12px;font-weight:700;opacity:.7;margin-top:-4px}
+table.rg{border-collapse:collapse;width:100%;font-size:13px}
+table.rg td,table.rg th{padding:5px 4px;text-align:center;border-bottom:1px solid var(--line)}
+table.rg th{color:var(--mute);font-weight:700}
+table.rg td:first-child{text-align:left;min-width:150px}
+table.rg select,table.rg input{padding:5px 6px;border-radius:8px}
+.steprow{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:12px}
+.mk{border:1px solid var(--line);border-radius:14px;padding:14px;background:var(--field)}
+.mk b{display:block;margin-bottom:2px} .mk p{margin:0 0 10px;color:var(--mute);font-size:13px}
+.log{background:#0b0919;color:#d8d3f5;border-radius:12px;padding:10px 12px;font:12.5px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;height:150px;overflow:auto;white-space:pre-wrap}
+.player{display:flex;gap:16px;flex-wrap:wrap;margin-top:14px}
+.player video{max-height:520px;border-radius:14px;background:#000}
 .pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:12.5px;font-weight:700;background:var(--field);border:1px solid var(--line);color:var(--mute)}
 .pill.run{color:var(--accent);border-color:var(--accent)} .pill.ok{color:var(--good);border-color:var(--good)} .pill.err{color:var(--bad);border-color:var(--bad)}
+.float{position:fixed;right:18px;bottom:18px;z-index:10;display:flex;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 12px;box-shadow:0 10px 30px rgba(40,20,90,.25)}
 .dirty{color:var(--bad);font-weight:700;font-size:13px}
-.note{color:var(--mute);font-size:13px}
 .hidden{display:none!important}
+details summary{cursor:pointer;font-weight:800}
 </style>
 </head>
 <body>
-<header>
-  <div class="wrap">
-    <div class="top">
-      <div class="mark">🎼</div>
-      <div>
-        <h1 id="projTitle">Raaga Thoram</h1>
-        <div class="sub">Episode settings &nbsp;·&nbsp; <span class="title-live" id="liveTitle"></span></div>
-      </div>
-      <div class="ep-pick">
-        <select id="ep" aria-label="Episode" style="min-width:140px;color:#1d1a2e"></select>
-        <button class="small" id="newEp">+ New</button>
-      </div>
-    </div>
+<header><div class="top">
+  <div class="mark">🎼</div>
+  <div><h1 id="projTitle">Raaga Thoram</h1>
+    <div class="sub">Episode settings &nbsp;·&nbsp; <span class="title-live" id="liveTitle"></span></div></div>
+  <div class="ep-pick">
+    <span class="sub">Episode</span><select id="ep" aria-label="Episode"></select>
+    <button class="small" id="newEp">+ New</button>
+    <button class="small" id="themeBtn" title="Light / dark">◐</button>
   </div>
-</header>
+</div></header>
 
-<main class="wrap">
+<div class="layout">
+  <nav class="steps" id="steps">
+    <a href="#s1" class="on"><b>1</b>Files</a><a href="#s2"><b>2</b>Raga &amp; letters</a><a href="#s3"><b>3</b>Speeds &amp; animation</a>
+    <a href="#s4"><b>4</b>Look</a><a href="#s5"><b>5</b>Follow her singing</a><a href="#s6"><b>6</b>Opening title</a>
+    <a href="#s7"><b>7</b>Post</a><a href="#s8"><b>8</b>Make the video</a>
+  </nav>
+  <main>
+    <div class="summary" id="summary"></div>
 
-  <section class="card">
-    <h2>1 · Files</h2>
-    <p class="hint">Pick the files you put in this episode's folder (<code id="folder"></code>).</p>
-    <div class="grid">
-      <label class="f"><span class="l">Master audio (tabla + tanpura + voice)</span><select id="master"></select></label>
-      <label class="f"><span class="l">Cousin video</span><select id="cousin1"></select></label>
-      <label class="f"><span class="l">Second cousin video (optional)</span><select id="cousin2"></select></label>
-      <label class="f"><span class="l">Cousin names (separated by commas)</span><input type="text" id="names" placeholder="Soujanya, Soumya"></label>
-    </div>
-  </section>
+    <section class="card" id="s1">
+      <h2><span class="n">1</span>Files</h2>
+      <p class="hint">Copy your recordings into <code id="folder"></code> and they appear in these lists.</p>
+      <div class="grid">
+        <label class="f"><span class="l">Master audio (tabla + tanpura + voice)</span><select id="master"></select></label>
+        <label class="f"><span class="l">Cousin video</span><select id="cousin1"></select></label>
+        <label class="f"><span class="l">Second cousin video (optional)</span><select id="cousin2"></select></label>
+        <label class="f"><span class="l">Cousin names (commas between)</span><input type="text" id="names" placeholder="Soujanya, Soumya"></label>
+      </div>
+    </section>
 
-  <section class="card">
-    <h2>2 · Exercise</h2>
-    <div class="grid">
-      <label class="f"><span class="l">Sarali Varisai number</span><select id="exercise"></select></label>
-      <label class="f"><span class="l">Raga</span><input type="text" id="raga" list="ragas" placeholder="Kalyani"><datalist id="ragas"></datalist></label>
-      <label class="f"><span class="l">Letters on screen</span>
-        <select id="script"><option value="latin">English (S R G M)</option><option value="telugu">Telugu</option></select></label>
-      <div style="display:flex;align-items:flex-end;padding-bottom:6px"><label class="switch"><input type="checkbox" id="showVariants"> Show R₂ G₃ M₂ D₂ N₃ numbers</label></div>
-    </div>
-  </section>
+    <section class="card" id="s2">
+      <h2><span class="n">2</span>Raga &amp; letters</h2>
+      <div class="grid">
+        <label class="f"><span class="l">Sarali Varisai number</span><select id="exercise"></select></label>
+        <label class="f"><span class="l">Raga</span><select id="raga"></select></label>
+        <div style="display:flex;align-items:flex-end;padding-bottom:6px"><label class="switch"><input type="checkbox" id="showVariants"> Show the variant numbers (R₂ G₃ …)</label></div>
+      </div>
+      <div class="scale" id="scale"></div>
+      <div class="hint" id="ragaNote"></div>
+      <span class="l" style="margin-top:6px">Letters on screen</span>
+      <div class="letters" id="letters"></div>
+      <details style="margin-top:14px"><summary>Edit the raga list (variants for each note)</summary>
+        <p class="hint">Pick the variant each raga uses for every note. “–” means the raga does not use that note. Mark a raga “please verify” until an expert has checked it.</p>
+        <div style="overflow:auto"><table class="rg" id="ragaTable"></table></div>
+        <div class="row" style="margin-top:10px"><button class="small" id="addRaga">+ Add a raga</button><button class="small primary" id="saveRagas">Save ragas</button><span class="pill" id="ragaStatus"></span></div>
+      </details>
+    </section>
 
-  <section class="card">
-    <h2>3 · Speeds in this video</h2>
-    <p class="hint">One row for each time she sings the exercise. Give roughly the second in the master audio where the first note is sung; the tool finds the exact moment by itself.</p>
-    <div id="parts"></div>
-    <button class="small" id="addPart">+ Add a speed</button>
-  </section>
+    <section class="card" id="s3">
+      <h2><span class="n">3</span>Speeds &amp; animation</h2>
+      <p class="hint">One row each time she sings the exercise. Say roughly where she starts (in seconds, in the master audio); the tool finds the exact moment itself. The moving picture shows how the animation will look.</p>
+      <div class="speeds" id="parts"></div>
+      <div class="row" style="margin:12px 0"><button class="small" id="addPart">+ Add a speed</button></div>
+      <details open><summary>All animations (click one to use it for the highlighted speed)</summary><div class="gallery" id="gallery"></div></details>
+    </section>
 
-  <section class="card">
-    <h2>4 · Look</h2>
-    <div class="opt-cards" id="looks"></div>
-    <div class="grid" style="margin-top:16px">
-      <div><span class="l" style="font-weight:600;font-size:13.5px">Space for the animation</span>
-        <div class="slider"><input type="range" id="animFrac" min="30" max="60" step="1"><output id="animFracO"></output></div></div>
-      <div id="shiftBox"><span class="l" style="font-weight:600;font-size:13.5px">Push the video down (so heads are not hidden)</span>
-        <div class="slider"><input type="range" id="bgShift" min="0" max="45" step="1"><output id="bgShiftO"></output></div></div>
-    </div>
-  </section>
-
-  <section class="card">
-    <h2>5 · Following her singing</h2>
-    <div class="grid">
-      <div style="display:flex;align-items:flex-end;padding-bottom:6px"><label class="switch"><input type="checkbox" id="followVoice"> Follow her voice automatically</label></div>
-      <label class="f"><span class="l">How to follow</span>
-        <select id="followMode">
-          <option value="auto">Automatic (best choice)</option>
-          <option value="locked">Locked to the tabla beat</option>
-          <option value="free">Note by note</option>
-        </select></label>
-    </div>
-    <div style="margin-top:14px"><span style="font-weight:600;font-size:13.5px">Animation earlier ◀ ▶ later <span class="note">(seconds; the animation is a little early on purpose)</span></span>
-      <div class="slider"><input type="range" id="lag" min="-0.4" max="0.3" step="0.01"><output id="lagO"></output></div></div>
-  </section>
-
-  <section class="card">
-    <h2>6 · Opening title</h2>
-    <p class="hint">Plays first and fades into the video. Each box is one line.</p>
-    <label class="switch" style="margin-bottom:14px"><input type="checkbox" id="introOn"> Show the opening title</label>
-    <div id="introBody">
-      <div id="lines"></div>
-      <button class="small" id="addLine">+ Add a line</button>
+    <section class="card" id="s4">
+      <h2><span class="n">4</span>Look</h2>
+      <div class="opt-cards" id="looks"></div>
       <div class="grid" style="margin-top:16px">
-        <div><span class="l" style="font-weight:600;font-size:13.5px;display:block;margin-bottom:6px">Colour</span><div class="swatches" id="swatches"></div></div>
-        <label class="f"><span class="l">Seconds on screen</span><input type="number" id="introSecs" min="2" max="12" step="0.5"></label>
-        <label class="f"><span class="l">Change into the video with</span><select id="trans"></select></label>
-        <label class="f"><span class="l">Change takes (seconds)</span><input type="number" id="transSecs" min="0.2" max="2.5" step="0.1"></label>
+        <div><span class="l">Space for the animation</span><div class="slider"><input type="range" id="animFrac" min="30" max="60"><output id="animFracO"></output></div></div>
+        <div id="shiftBox"><span class="l">Push her video down (so her head is not hidden)</span><div class="slider"><input type="range" id="bgShift" min="0" max="45"><output id="bgShiftO"></output></div></div>
       </div>
-      <div class="preview-title" id="titlePrev"></div>
-    </div>
-  </section>
+    </section>
 
-  <section class="card">
-    <h2>7 · Post</h2>
-    <label class="f"><span class="l">Hashtags</span><textarea id="hashtags"></textarea></label>
-  </section>
+    <section class="card" id="s5">
+      <h2><span class="n">5</span>Follow her singing</h2>
+      <p class="hint">The animation is timed from her recording so the notes light up with her voice.</p>
+      <div class="grid">
+        <div style="display:flex;align-items:flex-end;padding-bottom:6px"><label class="switch"><input type="checkbox" id="followVoice"> Follow her voice automatically</label></div>
+        <label class="f"><span class="l">How</span><select id="followMode">
+          <option value="auto">Automatic (best choice)</option><option value="locked">Locked to the tabla beat</option><option value="free">Note by note</option></select></label>
+      </div>
+      <div style="margin-top:14px"><span class="l">Animation earlier ◀ ▶ later <span style="color:var(--mute);font-weight:500">(a little early looks best)</span></span>
+        <div class="slider"><input type="range" id="lag" min="-0.4" max="0.3" step="0.01"><output id="lagO"></output></div></div>
+    </section>
 
-  <details class="card">
-    <summary>Advanced (rarely needed)</summary>
-    <div class="grid" style="margin-top:14px">
-      <label class="f"><span class="l">Tempo (auto or a number)</span><input type="text" id="bpm"></label>
-      <label class="f"><span class="l">Count-in beeps</span><input type="number" id="countIn" min="0" max="8"></label>
-      <label class="f"><span class="l">Re-sync tolerance (seconds, empty = automatic)</span><input type="number" id="tol" min="0.02" max="0.5" step="0.01"></label>
-      <label class="f"><span class="l">Heading shown on the video (empty = automatic)</span><input type="text" id="title"></label>
-    </div>
-  </details>
-</main>
+    <section class="card" id="s6">
+      <h2><span class="n">6</span>Opening title</h2>
+      <p class="hint">Plays first, then changes into the video.</p>
+      <label class="switch" style="margin-bottom:14px"><input type="checkbox" id="introOn"> Show the opening title</label>
+      <div id="introBody">
+        <div class="grid">
+          <div><span class="l">Title lines (each box is one line)</span><div id="lines"></div><button class="small" id="addLine">+ Add a line</button></div>
+          <div><span class="l">Colour</span><div class="swatches" id="swatches"></div>
+            <div class="grid" style="margin-top:14px"><label class="f"><span class="l">Seconds on screen</span><input type="number" id="introSecs" min="2" max="12" step="0.5"></label>
+            <label class="f"><span class="l">Change takes (seconds)</span><input type="number" id="transSecs" min="0.2" max="2.5" step="0.1"></label></div></div>
+        </div>
+        <div class="preview-title" id="titlePrev"></div>
+        <span class="l" style="margin-top:18px">How the title changes into the video (click one)</span>
+        <div class="tgrid" id="tgrid"></div>
+        <button class="small" id="moreT" style="margin-top:10px">Show more</button>
+      </div>
+    </section>
 
-<div class="bar"><div class="in">
-  <div class="row">
-    <button class="primary" id="save">Save</button>
-    <button id="check">Check</button>
-    <button id="preview">Preview</button>
-    <button class="teal" id="final">Build final video</button>
-    <button id="stop" class="hidden">Stop</button>
-    <span id="status" class="pill">Ready</span>
-    <span id="dirty" class="dirty hidden">unsaved changes</span>
-    <span class="note" id="where" style="margin-left:auto"></span>
-  </div>
-  <div class="log" id="log">The check, preview and final build print their progress here.</div>
-</div></div>
+    <section class="card" id="s7">
+      <h2><span class="n">7</span>Post</h2>
+      <label class="f"><span class="l">Hashtags</span><textarea id="hashtags"></textarea></label>
+      <details style="margin-top:14px"><summary>Advanced (rarely needed)</summary>
+        <div class="grid" style="margin-top:12px">
+          <label class="f"><span class="l">Tempo (auto or a number)</span><input type="text" id="bpm"></label>
+          <label class="f"><span class="l">Count-in beeps</span><input type="number" id="countIn" min="0" max="8"></label>
+          <label class="f"><span class="l">Re-sync tolerance (seconds, empty = automatic)</span><input type="number" id="tol" min="0.02" max="0.5" step="0.01"></label>
+          <label class="f"><span class="l">Heading on the video (empty = automatic)</span><input type="text" id="title"></label>
+        </div></details>
+    </section>
+
+    <section class="card" id="s8">
+      <h2><span class="n">8</span>Make the video</h2>
+      <p class="hint">Your changes are saved first. Do these in order, or go straight to the last one.</p>
+      <div class="steprow">
+        <div class="mk"><b>1 · Check</b><p>Finds the timing and warns about problems. Takes about 30 seconds.</p><button id="check">Check</button></div>
+        <div class="mk"><b>2 · Preview</b><p>A small, quick copy to look at before the real one.</p><button id="preview">Make preview</button></div>
+        <div class="mk"><b>3 · Final video</b><p>The full-quality video, ready to post.</p><button class="teal" id="final">Build final video</button></div>
+      </div>
+      <div class="row" style="margin-bottom:8px"><span class="pill" id="status">Ready</span><button class="small hidden" id="stop">Stop</button><span id="where" style="color:var(--mute);font-size:13px"></span></div>
+      <div class="log" id="log">Progress shows here.</div>
+      <div class="player" id="player"></div>
+    </section>
+  </main>
+</div>
+
+<div class="float"><span class="dirty hidden" id="dirty">unsaved changes</span><button class="primary" id="save">Save</button></div>
 
 <script>
 const $ = id => document.getElementById(id);
-const THEME_GRAD = {
-  gold:['#fff0b0','#c4861f','255,170,40'], purple:['#ecd0ff','#9a55e8','165,70,235'], silver:['#ffffff','#7f8aa0','170,195,235'],
-  rosegold:['#ffe8e0','#c9776a','255,140,120'], emerald:['#d8ffe6','#1f9d5f','60,220,140'], ice:['#f0fbff','#2f9ad8','70,185,255'], crimson:['#ffd9d0','#c1262b','255,70,60']
-};
-const LOOKS = [
-  ['background','Full video background','Her video fills the screen; the animation sits on top.'],
-  ['cutout','Cut-out','She is cut out and stands on the animation background.'],
-  ['stacked','Stacked','Animation above, her video below.']
-];
+const LAT = ['S','R','G','M','P','D','N','Ś'], TEL = ['స','రి','గ','మ','ప','ద','ని','సం'];
+const VAR_CHOICES = [['', 'plain'], ['1', '1'], ['2', '2'], ['3', '3']];
+const NOTE_VARS = [[''], ['1','2','3'], ['1','2','3'], ['1','2'], [''], ['1','2','3'], ['1','2','3'], ['']];
+const SUB = {'1':'₁','2':'₂','3':'₃'};
+const THEME_GRAD = {gold:['#fff0b0','#c4861f','255,170,40'], purple:['#ecd0ff','#9a55e8','165,70,235'], silver:['#ffffff','#7f8aa0','170,195,235'],
+  rosegold:['#ffe8e0','#c9776a','255,140,120'], emerald:['#d8ffe6','#1f9d5f','60,220,140'], ice:['#f0fbff','#2f9ad8','70,185,255'], crimson:['#ffd9d0','#c1262b','255,70,60']};
+const LOOKS = [['background','Full video background','Her video fills the screen; the animation sits on top.'],
+  ['cutout','Cut-out','She is cut out and stands on the animation background.'], ['stacked','Stacked','Animation above, her video below.']];
 const STYLE_NAMES = {staircase:'Staircase',karaoke:'Karaoke line',bignote:'Big note',falling:'Falling notes',pitchtrail:'Pitch trail',gauge:'Gauge',pads:'Pad grid',arcs:'Arcs'};
+const T_NAMES = {fade:'Fade',dissolve:'Dissolve',fadeblack:'Through black',fadewhite:'Flash white',zoomin:'Zoom in',circleopen:'Circle opens',circleclose:'Circle closes',radial:'Radial sweep',
+  smoothup:'Smooth up',smoothleft:'Smooth left',slideup:'Slide up',slideleft:'Slide left',pixelize:'Pixelate',hblur:'Blur',squeezeh:'Squeeze',wipeleft:'Wipe left',wiperight:'Wipe right',wipeup:'Wipe up',
+  coverleft:'Cover left',revealleft:'Reveal left',distance:'Distance',fadegrays:'Through grey',horzopen:'Open sideways',vertopen:'Open up/down'};
+const T_TOP = ['dissolve','fade','fadeblack','fadewhite','zoomin','circleopen','radial','smoothup','slideup','pixelize','hblur','squeezeh'];
+
 let O = null, files = [], cfg = {}, dirty = false, polling = null, logSeen = 0;
+let parts = [], lines = [], theme = 'purple', look = 'background', script = 'latin', trans = 'dissolve', selPart = 0;
+let ragas = {}, exCache = {}, anims = [];
 
 const api = async (path, body) => {
   const r = await fetch(path, body ? {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)} : {});
   const j = await r.json(); if (j.error) throw new Error(j.error); return j;
 };
 const val = (k, d) => (cfg[k] !== undefined && cfg[k] !== null) ? cfg[k] : (O.defaults[k] !== undefined ? O.defaults[k] : d);
-const mark = () => { dirty = true; $('dirty').classList.remove('hidden'); };
+const mark = () => { dirty = true; $('dirty').classList.remove('hidden'); summary(); };
 const clean = () => { dirty = false; $('dirty').classList.add('hidden'); };
-
 function fillSelect(sel, items, cur, empty){
-  sel.innerHTML = '';
-  if (empty !== undefined) sel.add(new Option(empty, ''));
+  sel.innerHTML = ''; if (empty !== undefined) sel.add(new Option(empty, ''));
   const list = items.slice(); if (cur && !list.includes(cur)) list.unshift(cur);
-  list.forEach(f => sel.add(new Option(f, f)));
-  sel.value = cur || '';
+  list.forEach(f => sel.add(new Option(f, f))); sel.value = cur || '';
 }
 
-let parts = [], lines = [], theme = 'purple', look = 'background';
+/* ---------- raga ---------- */
+function ragaInfo(name){
+  const k = Object.keys(ragas).find(x => !x.startsWith('_') && x.toLowerCase().replace(/\s+/g, '') === (name || '').toLowerCase().replace(/\s+/g, ''));
+  return k ? Object.assign({name: k}, ragas[k]) : null;
+}
+function ragaVariants(){ const r = ragaInfo($('raga').value); return r ? r.notes.map(n => n === null ? '' : String(n)) : null; }
+function ragaPresent(){ const r = ragaInfo($('raga').value); return r ? r.notes.map(n => n !== null) : null; }
+function drawScale(){
+  const r = ragaInfo($('raga').value), box = $('scale'); box.innerHTML = '';
+  if (!r) { $('ragaNote').textContent = 'This raga is not in the list yet. Add it under “Edit the raga list”. Letters will show without variant numbers.'; return; }
+  r.notes.forEach((n, i) => { const d = document.createElement('div'); d.className = 'note' + (n === null ? ' off' : '');
+    d.innerHTML = `${LAT[i]}${$('showVariants').checked ? (SUB[n] || '') : ''}<small>${TEL[i]}</small>`; box.appendChild(d); });
+  const bits = []; if (r.melakarta) bits.push('melakarta ' + r.melakarta); if (r.parent) bits.push('janya of ' + r.parent);
+  $('ragaNote').innerHTML = bits.join(' · ') + (r.check ? ` · <b style="color:${r.check === 'sure' ? 'var(--good)' : 'var(--warn)'}">${r.check === 'sure' ? 'variants: checked' : 'variants: please verify'}</b>` : '');
+}
+function drawLetters(){
+  const box = $('letters'); box.innerHTML = '';
+  [['latin','English','<div class="eg">R₂</div>'],['telugu','Telugu','<div class="eg">రి</div>'],['both','Both','<div class="eg">R₂<small>రి</small></div>']].forEach(([k, n, eg]) => {
+    const el = document.createElement('div'); el.className = 'opt' + (script === k ? ' on' : ''); el.innerHTML = eg + `<b>${n}</b>`;
+    el.onclick = () => { script = k; drawLetters(); refreshAnims(); mark(); }; box.appendChild(el); });
+}
+function drawRagaTable(){
+  const t = $('ragaTable'); t.innerHTML = '<tr><th>Raga</th>' + LAT.map((l, i) => `<th>${l}<br><span style="font-weight:500">${TEL[i]}</span></th>`).join('') + '<th>Checked?</th><th></th></tr>';
+  Object.keys(ragas).filter(k => !k.startsWith('_')).forEach(name => {
+    const r = ragas[name], tr = document.createElement('tr');
+    tr.innerHTML = `<td><input type="text" value="" data-n></td>` + r.notes.map((n, i) => `<td><select data-i="${i}"><option value="-">–</option>${NOTE_VARS[i].map(v => `<option value="${v}">${v === '' ? 'plain' : v}</option>`).join('')}</select></td>`).join('') +
+      `<td><select data-c><option value="sure">checked</option><option value="please verify">please verify</option></select></td><td><button class="small" data-x>✕</button></td>`;
+    tr.querySelector('[data-n]').value = name;
+    tr.querySelectorAll('select[data-i]').forEach(s => { const n = r.notes[+s.dataset.i]; s.value = n === null ? '-' : String(n); });
+    tr.querySelector('[data-c]').value = r.check || 'please verify';
+    tr.querySelector('[data-x]').onclick = () => { delete ragas[name]; drawRagaTable(); fillRagas(); };
+    t.appendChild(tr);
+  });
+}
+function collectRagas(){
+  const out = {_help: ragas._help || ''};
+  document.querySelectorAll('#ragaTable tr').forEach((tr, ix) => { if (!ix) return;
+    const name = tr.querySelector('[data-n]').value.trim(); if (!name) return;
+    const old = Object.values(ragas).find(r => r && r.notes) && ragas[name] || {};
+    const notes = [...tr.querySelectorAll('select[data-i]')].map(s => s.value === '-' ? null : s.value);
+    out[name] = Object.assign({}, old, {notes, check: tr.querySelector('[data-c]').value});
+  });
+  return out;
+}
+function fillRagas(cur){
+  const names = Object.keys(ragas).filter(k => !k.startsWith('_')), sel = $('raga'), keep = cur || sel.value;
+  fillSelect(sel, names, names.find(n => n.toLowerCase() === (keep || '').toLowerCase()) || keep); drawScale();
+}
+
+/* ---------- live animation previews ---------- */
+async function getEx(n){ if (!exCache[n]) exCache[n] = await api('/api/exercise?n=' + n); return exCache[n]; }
+function stopAnims(){ anims.forEach(a => { clearInterval(a.timer); a.obs && a.obs.disconnect(); }); anims = []; }
+async function mkPreview(box, style, speed, w){
+  const ex = await getEx($('exercise').value || 1), npb = {1: 1, 2: 2, 3: 4}[speed] || 1, bpm = 100;
+  const fr = document.createElement('iframe'); fr.src = '/render/render.html'; fr.width = 360; fr.height = 288; box.appendChild(fr);
+  const k = w / 360; fr.style.transform = `scale(${k})`; box.style.height = (288 * k) + 'px';
+  const a = {fr, style, speed, visible: true}; anims.push(a);
+  fr.onload = async () => {
+    const win = fr.contentWindow;
+    const c = {style, script, title: $('raga').value || 'Raga', speedTag: false, bpm, parts: [{style, speed, npb, start: 0.5, end: 1e6, knots: null}], exercise: ex,
+      variants: $('showVariants').checked ? ragaVariants() : null, present: ragaPresent(), scale: 1, designH: 288};
+    try { await win.initRender(c); win.renderFrame(4); } catch (e) { return; }
+    const t0 = performance.now(), beat = 60 / bpm, span = 1 + Math.min(14, ex.seq.length / npb * beat);
+    a.timer = setInterval(() => { if (!a.visible) return; try { win.renderFrame(0.5 + ((performance.now() - t0) / 1000) % span); } catch (e) {} }, 66);
+    a.obs = new IntersectionObserver(es => es.forEach(e => a.visible = e.isIntersecting)); a.obs.observe(box);
+  };
+}
+let refreshT = null;
+function refreshAnims(){ clearTimeout(refreshT); refreshT = setTimeout(async () => { stopAnims(); $('gallery').innerHTML = ''; document.querySelectorAll('#parts .pv').forEach(b => b.innerHTML = '');
+  const sp = (parts[selPart] || parts[0] || {speed: 1}).speed;
+  for (const st of O.styles) { const tile = document.createElement('div'); tile.className = 'tile' + ((parts[selPart] || {}).style === st ? ' on' : ''); tile.innerHTML = '<div class="pv"></div><b></b>';
+    tile.querySelector('b').textContent = STYLE_NAMES[st] || st; tile.onclick = () => { if (parts[selPart]) { parts[selPart].style = st; drawParts(); mark(); } };
+    $('gallery').appendChild(tile); mkPreview(tile.querySelector('.pv'), st, sp, 150); }
+  document.querySelectorAll('#parts .pv').forEach((b, i) => mkPreview(b, parts[i].style, parts[i].speed, 270)); }, 350); }
 
 function drawParts(){
   const box = $('parts'); box.innerHTML = '';
   parts.forEach((p, i) => {
-    const row = document.createElement('div'); row.className = 'sp-row';
-    row.innerHTML = `
-      <label class="f"><span class="l">Speed</span><select data-k="speed"><option value="1">Speed 1</option><option value="2">Speed 2</option><option value="3">Speed 3</option></select></label>
-      <label class="f"><span class="l">Animation</span><select data-k="style">${O.styles.map(s => `<option value="${s}">${STYLE_NAMES[s] || s}</option>`).join('')}</select></label>
-      <label class="f"><span class="l">Starts about (seconds)</span><input type="number" step="0.5" min="0" data-k="start"></label>
-      <button class="small" data-del title="Remove">✕</button>`;
-    row.querySelector('[data-k=speed]').value = p.speed;
-    row.querySelector('[data-k=style]').value = p.style;
-    row.querySelector('[data-k=start]').value = p.start;
+    const row = document.createElement('div'); row.className = 'speed'; if (i === selPart) row.style.borderColor = 'var(--accent)';
+    row.innerHTML = `<div class="ctl">
+        <label class="f"><span class="l">Speed</span><select data-k="speed"><option value="1">Speed 1 (slow)</option><option value="2">Speed 2</option><option value="3">Speed 3 (fast)</option></select></label>
+        <label class="f"><span class="l">Starts about (s)</span><input type="number" step="0.5" min="0" data-k="start"></label>
+        <label class="f wide"><span class="l">Animation</span><select data-k="style">${O.styles.map(s => `<option value="${s}">${STYLE_NAMES[s] || s}</option>`).join('')}</select></label>
+        <div class="wide row"><button class="small" data-sel>Choose from the gallery ↓</button><button class="small" data-del>Remove</button></div></div>
+      <div class="pv"></div>`;
+    row.querySelector('[data-k=speed]').value = p.speed; row.querySelector('[data-k=style]').value = p.style; row.querySelector('[data-k=start]').value = p.start;
     row.querySelectorAll('[data-k]').forEach(el => el.addEventListener('input', () => {
-      p[el.dataset.k] = el.dataset.k === 'start' ? parseFloat(el.value || 0) : (el.dataset.k === 'speed' ? parseInt(el.value) : el.value); mark(); }));
-    row.querySelector('[data-del]').onclick = () => { if (parts.length > 1) { parts.splice(i, 1); drawParts(); mark(); } };
+      p[el.dataset.k] = el.dataset.k === 'start' ? parseFloat(el.value || 0) : (el.dataset.k === 'speed' ? parseInt(el.value) : el.value); mark();
+      if (el.dataset.k !== 'start') { drawParts(); } }));
+    row.querySelector('[data-sel]').onclick = () => { selPart = i; drawParts(); $('gallery').scrollIntoView({behavior: 'smooth', block: 'center'}); };
+    row.querySelector('[data-del]').onclick = () => { if (parts.length > 1) { parts.splice(i, 1); selPart = 0; drawParts(); mark(); } };
     box.appendChild(row);
   });
   $('addPart').classList.toggle('hidden', parts.length >= 3);
+  refreshAnims();
 }
+
+/* ---------- look / intro ---------- */
 function drawLooks(){
   const box = $('looks'); box.innerHTML = '';
-  LOOKS.forEach(([k, name, d]) => {
-    const el = document.createElement('div'); el.className = 'opt' + (look === k ? ' on' : '');
-    el.innerHTML = `<b>${name}</b><small>${d}</small>`;
-    el.onclick = () => { look = k; drawLooks(); mark(); }; box.appendChild(el);
-  });
+  LOOKS.forEach(([k, name, d]) => { const el = document.createElement('div'); el.className = 'opt' + (look === k ? ' on' : ''); el.innerHTML = `<b>${name}</b><small>${d}</small>`;
+    el.onclick = () => { look = k; drawLooks(); mark(); }; box.appendChild(el); });
   $('shiftBox').classList.toggle('hidden', look !== 'background');
 }
 function drawLines(){
   const box = $('lines'); box.innerHTML = '';
-  lines.forEach((t, i) => {
-    const row = document.createElement('div'); row.className = 'row'; row.style.marginBottom = '8px';
-    row.innerHTML = `<input type="text" style="flex:1" value="" placeholder="Line ${i + 1}"><button class="small">✕</button>`;
-    const inp = row.querySelector('input'); inp.value = t;
-    inp.oninput = () => { lines[i] = inp.value; drawPreview(); mark(); };
-    row.querySelector('button').onclick = () => { if (lines.length > 1) { lines.splice(i, 1); drawLines(); drawPreview(); mark(); } };
-    box.appendChild(row);
-  });
+  lines.forEach((t, i) => { const row = document.createElement('div'); row.className = 'row'; row.style.marginBottom = '8px';
+    row.innerHTML = `<input type="text" style="flex:1" placeholder="Line ${i + 1}"><button class="small">✕</button>`;
+    const inp = row.querySelector('input'); inp.value = t; inp.oninput = () => { lines[i] = inp.value; drawPreview(); mark(); };
+    row.querySelector('button').onclick = () => { if (lines.length > 1) { lines.splice(i, 1); drawLines(); drawPreview(); mark(); } }; box.appendChild(row); });
   $('addLine').classList.toggle('hidden', lines.length >= 4);
 }
 function drawSwatches(){
   const box = $('swatches'); box.innerHTML = '';
-  O.themes.forEach(t => {
-    const g = THEME_GRAD[t], el = document.createElement('div');
-    el.className = 'sw' + (theme === t ? ' on' : ''); el.title = t; el.style.background = `linear-gradient(135deg,${g[0]},${g[1]})`;
-    el.onclick = () => { theme = t; drawSwatches(); drawPreview(); mark(); }; box.appendChild(el);
-  });
+  O.themes.forEach(t => { const g = THEME_GRAD[t], el = document.createElement('div'); el.className = 'sw' + (theme === t ? ' on' : ''); el.title = t;
+    el.style.background = `linear-gradient(135deg,${g[0]},${g[1]})`; el.onclick = () => { theme = t; drawSwatches(); drawPreview(); mark(); }; box.appendChild(el); });
 }
 function drawPreview(){
   const g = THEME_GRAD[theme] || THEME_GRAD.purple, p = $('titlePrev');
@@ -290,66 +397,77 @@ function drawPreview(){
   $('liveTitle').textContent = lines.filter(l => l.trim()).join(' ');
   $('introBody').classList.toggle('hidden', !$('introOn').checked);
 }
+let showAllT = false;
+function drawTrans(){
+  const box = $('tgrid'); box.innerHTML = ''; const list = showAllT ? O.transitions : T_TOP.filter(t => O.transitions.includes(t));
+  if (!list.includes(trans)) list.push(trans);
+  list.forEach(n => { const c = document.createElement('div'); c.className = 'tcard' + (trans === n ? ' on' : '');
+    c.innerHTML = `<video muted loop playsinline preload="none"></video><b>${T_NAMES[n] || n}</b>`; c.onclick = () => { trans = n; drawTrans(); mark(); }; box.appendChild(c);
+    const v = c.querySelector('video'); const io = new IntersectionObserver(es => es.forEach(async e => { if (e.isIntersecting) { if (!v.src) { try { v.src = (await api('/api/transition?name=' + n)).url; } catch (er) { return; } } v.play().catch(() => {}); } else v.pause(); })); io.observe(c); });
+  $('moreT').textContent = showAllT ? 'Show fewer' : 'Show more';
+}
+
+function summary(){
+  const raga = $('raga').value, sp = parts.map(p => p.speed).join(', ');
+  const chips = [`<span class="chip">${$('ep').value}</span>`, `<span class="chip">Exercise ${$('exercise').value}</span>`, `<span class="chip">${raga || 'no raga'}</span>`,
+    `<span class="chip">Speed${parts.length > 1 ? 's' : ''} ${sp}</span>`, `<span class="chip">${{latin:'English',telugu:'Telugu',both:'English + Telugu'}[script]}</span>`,
+    `<span class="chip">${$('introOn').checked ? 'Title: ' + (T_NAMES[trans] || trans) : 'No title'}</span>`];
+  chips.push($('master').value ? '<span class="chip good">✓ master audio</span>' : '<span class="chip bad">no master audio</span>');
+  chips.push($('cousin1').value ? '<span class="chip good">✓ cousin video</span>' : '<span class="chip warn">no cousin video</span>');
+  const r = ragaInfo(raga); if (r && r.check !== 'sure') chips.push('<span class="chip warn">raga variants: please verify</span>');
+  $('summary').innerHTML = chips.join('');
+}
 function slider(id, out, fmt){ const s = $(id); const f = () => $(out).textContent = fmt(parseFloat(s.value)); s.addEventListener('input', () => { f(); mark(); }); f(); }
 
-function load(){
-  const ep = $('ep').value;
-  return api('/api/config?ep=' + encodeURIComponent(ep)).then(r => {
-    cfg = r.config; files = r.files; $('folder').textContent = 'episodes/' + ep + '/';
-    const media = files, vids = files.filter(f => /\.(mp4|mov|m4v|mkv)$/i.test(f)), auds = files.filter(f => /\.(mp3|wav|m4a|aac|flac|aiff?)$/i.test(f));
-    fillSelect($('master'), auds.length ? auds : media, val('master', ''));
-    fillSelect($('cousin1'), vids.length ? vids : media, (cfg.cousins || [])[0] || '', '(none)');
-    fillSelect($('cousin2'), vids.length ? vids : media, (cfg.cousins || [])[1] || '', '(none)');
-    $('names').value = (cfg.cousin_names || []).join(', ');
-    fillSelect($('exercise'), Array.from({length:10}, (_, i) => String(i + 1)), String(val('exercise', 1)));
-    $('raga').value = val('raga', 'Kalyani');
-    $('script').value = val('script', 'latin');
-    $('showVariants').checked = val('show_variants', true);
-    parts = (cfg.parts && cfg.parts.length ? cfg.parts : [{speed: val('speed', 1), pattern_start: val('pattern_start', 0), style: val('style', 'staircase')}])
-      .map(p => ({speed: p.speed || 1, style: p.style || val('style', 'staircase'), start: p.pattern_start !== undefined ? p.pattern_start : 0, _extra: p}));
-    drawParts();
-    look = val('cousin_look', 'background'); drawLooks();
-    $('animFrac').value = Math.round(val('animation_fraction', 0.45) * 100); $('animFrac').dispatchEvent(new Event('input'));
-    $('bgShift').value = Math.round(val('bg_shift', 0.3) * 100); $('bgShift').dispatchEvent(new Event('input'));
-    $('followVoice').checked = !!val('follow_voice', false) && val('follow_voice') !== 'off';
-    $('followMode').value = val('follow_mode', 'auto');
-    $('lag').value = val('follow_lag', -0.12); $('lag').dispatchEvent(new Event('input'));
-    $('introOn').checked = val('intro', true);
-    const it = val('intro_title', ['Ajanta', 'Raaga Thoram']); lines = Array.isArray(it) ? it.slice() : String(it).split('\n');
-    drawLines(); theme = val('intro_theme', 'purple'); drawSwatches();
-    $('introSecs').value = val('intro_seconds', 5); fillSelect($('trans'), O.transitions, val('intro_transition', 'dissolve'));
-    $('transSecs').value = val('intro_transition_seconds', 0.8);
-    $('hashtags').value = val('hashtags', '');
-    $('bpm').value = val('bpm', 'auto'); $('countIn').value = val('count_in_beats', 0);
-    $('tol').value = cfg.follow_tolerance || ''; $('title').value = cfg.title || '';
-    drawPreview(); clean();
-  });
+/* ---------- load / save ---------- */
+async function load(){
+  const ep = $('ep').value, r = await api('/api/config?ep=' + encodeURIComponent(ep));
+  cfg = r.config; files = r.files; $('folder').textContent = 'episodes/' + ep + '/';
+  const vids = files.filter(f => /\.(mp4|mov|m4v|mkv)$/i.test(f)), auds = files.filter(f => /\.(mp3|wav|m4a|aac|flac|aiff?)$/i.test(f));
+  fillSelect($('master'), auds.length ? auds : files, val('master', ''));
+  fillSelect($('cousin1'), vids.length ? vids : files, (cfg.cousins || [])[0] || '', '(none)');
+  fillSelect($('cousin2'), vids.length ? vids : files, (cfg.cousins || [])[1] || '', '(none)');
+  $('names').value = (cfg.cousin_names || []).join(', ');
+  fillSelect($('exercise'), Array.from({length: 10}, (_, i) => String(i + 1)), String(val('exercise', 1)));
+  ragas = await api('/api/ragas'); fillRagas(val('raga', 'Kalyani')); drawRagaTable();
+  script = val('script', 'latin'); $('showVariants').checked = val('show_variants', true); drawLetters();
+  parts = (cfg.parts && cfg.parts.length ? cfg.parts : [{speed: val('speed', 1), pattern_start: val('pattern_start', 0), style: val('style', 'staircase')}])
+    .map(p => ({speed: p.speed || 1, style: p.style || val('style', 'staircase'), start: p.pattern_start !== undefined ? p.pattern_start : 0, _extra: p}));
+  selPart = 0; drawParts();
+  look = val('cousin_look', 'background'); drawLooks();
+  $('animFrac').value = Math.round(val('animation_fraction', 0.45) * 100); $('animFrac').dispatchEvent(new Event('input'));
+  $('bgShift').value = Math.round(val('bg_shift', 0.3) * 100); $('bgShift').dispatchEvent(new Event('input'));
+  const fv = val('follow_voice', false); $('followVoice').checked = !!fv && fv !== 'off' && fv !== 'false';
+  $('followMode').value = val('follow_mode', 'auto'); $('lag').value = val('follow_lag', -0.12); $('lag').dispatchEvent(new Event('input'));
+  $('introOn').checked = val('intro', true);
+  const it = val('intro_title', ['Ajanta', 'Raaga Thoram']); lines = Array.isArray(it) ? it.slice() : String(it).split('\n'); drawLines();
+  theme = val('intro_theme', 'purple'); drawSwatches(); $('introSecs').value = val('intro_seconds', 5); trans = val('intro_transition', 'dissolve'); drawTrans();
+  $('transSecs').value = val('intro_transition_seconds', 0.8); $('hashtags').value = val('hashtags', '');
+  $('bpm').value = val('bpm', 'auto'); $('countIn').value = val('count_in_beats', 0); $('tol').value = cfg.follow_tolerance || ''; $('title').value = cfg.title || '';
+  drawPreview(); clean(); summary(); showOutputs(); setupInitialLog();
 }
-
 function collect(){
-  const cousins = [$('cousin1').value, $('cousin2').value].filter(Boolean);
-  const names = $('names').value.split(',').map(s => s.trim()).filter(Boolean);
-  const ps = parts.map(p => {
-    const o = Object.assign({}, p._extra || {}, {speed: p.speed, style: p.style, pattern_start: p.start}); return o; });
-  const bpmRaw = $('bpm').value.trim();
-  const bpm = bpmRaw === '' || bpmRaw.toLowerCase() === 'auto' ? 'auto' : parseFloat(bpmRaw);
-  return {
-    master: $('master').value, cousins, cousin_names: names,
-    exercise: parseInt($('exercise').value), raga: $('raga').value.trim(), script: $('script').value, show_variants: $('showVariants').checked,
-    parts: ps, style: parts[0].style, speed: parts[0].speed, pattern_start: parts[0].start,
-    cousin_look: look, animation_fraction: parseInt($('animFrac').value) / 100, bg_shift: parseInt($('bgShift').value) / 100,
-    follow_voice: $('followVoice').checked, follow_mode: $('followMode').value, follow_lag: parseFloat($('lag').value),
-    intro: $('introOn').checked, intro_title: lines.map(s => s.trim()).filter(Boolean), intro_theme: theme,
-    intro_seconds: parseFloat($('introSecs').value), intro_transition: $('trans').value, intro_transition_seconds: parseFloat($('transSecs').value),
-    hashtags: $('hashtags').value.trim(), bpm: isNaN(bpm) ? 'auto' : bpm, count_in_beats: parseInt($('countIn').value || 0),
-    follow_tolerance: $('tol').value ? parseFloat($('tol').value) : null, title: $('title').value.trim() || null
-  };
+  const cousins = [$('cousin1').value, $('cousin2').value].filter(Boolean), names = $('names').value.split(',').map(s => s.trim()).filter(Boolean);
+  const ps = parts.map(p => Object.assign({}, p._extra || {}, {speed: p.speed, style: p.style, pattern_start: p.start}));
+  const bpmRaw = $('bpm').value.trim(), bpm = bpmRaw === '' || bpmRaw.toLowerCase() === 'auto' ? 'auto' : parseFloat(bpmRaw);
+  return {master: $('master').value, cousins, cousin_names: names, exercise: parseInt($('exercise').value), raga: $('raga').value.trim(), script, show_variants: $('showVariants').checked,
+    parts: ps, style: parts[0].style, speed: parts[0].speed, pattern_start: parts[0].start, cousin_look: look, animation_fraction: parseInt($('animFrac').value) / 100,
+    bg_shift: parseInt($('bgShift').value) / 100, follow_voice: $('followVoice').checked, follow_mode: $('followMode').value, follow_lag: parseFloat($('lag').value),
+    intro: $('introOn').checked, intro_title: lines.map(s => s.trim()).filter(Boolean), intro_theme: theme, intro_seconds: parseFloat($('introSecs').value),
+    intro_transition: trans, intro_transition_seconds: parseFloat($('transSecs').value), hashtags: $('hashtags').value.trim(), bpm: isNaN(bpm) ? 'auto' : bpm,
+    count_in_beats: parseInt($('countIn').value || 0), follow_tolerance: $('tol').value ? parseFloat($('tol').value) : null, title: $('title').value.trim() || null};
 }
-async function save(){
-  await api('/api/save', {ep: $('ep').value, values: collect()}); clean(); setStatus('Saved', 'ok');
-}
+async function save(){ await api('/api/save', {ep: $('ep').value, values: collect()}); clean(); setStatus('Saved', 'ok'); }
 function setStatus(t, cls){ const s = $('status'); s.textContent = t; s.className = 'pill ' + (cls || ''); }
 
+/* ---------- running ---------- */
+async function showOutputs(mode){
+  const ep = $('ep').value, o = await api('/api/outputs?ep=' + encodeURIComponent(ep)), box = $('player'); box.innerHTML = '';
+  const add = (file, label) => { const w = document.createElement('div'); w.innerHTML = `<div class="l">${label}</div><video controls preload="metadata" src="/media/${ep}/out/${file}?t=${Date.now()}"></video>`; box.appendChild(w); };
+  if (o['final.mp4']) add('final.mp4', 'Final video'); if (o['preview.mp4'] && (!o['final.mp4'] || mode === 'preview')) add('preview.mp4', 'Preview');
+  if (o['caption.txt']) fetch(`/media/${ep}/out/caption.txt`).then(r => r.text()).then(t => { const d = document.createElement('div'); d.style.cssText = 'flex:1;min-width:240px'; d.innerHTML = '<div class="l">Caption to paste when you post</div><pre style="white-space:pre-wrap;background:var(--field);border:1px solid var(--line);border-radius:12px;padding:12px;margin:0"></pre>'; d.querySelector('pre').textContent = t; box.appendChild(d); });
+}
+function setupInitialLog(){ $('log').textContent = 'Progress shows here.'; setStatus('Ready'); $('where').textContent = ''; }
 async function run(mode){
   try { await save(); await api('/api/run', {ep: $('ep').value, mode}); } catch (e) { setStatus(e.message, 'err'); return; }
   logSeen = 0; $('log').textContent = ''; setBusy(true); setStatus({check:'Checking…', preview:'Making the preview…', final:'Building the final video…'}[mode], 'run');
@@ -358,39 +476,41 @@ async function run(mode){
 async function poll(){
   try {
     const r = await api('/api/log?since=' + logSeen);
-    if (r.lines.length) { const L = $('log'); const atEnd = L.scrollTop + L.clientHeight >= L.scrollHeight - 30;
-      L.textContent += (L.textContent ? '\n' : '') + r.lines.join('\n'); logSeen = r.total; if (atEnd) L.scrollTop = L.scrollHeight; }
-    if (!r.running) {
-      clearInterval(polling); setBusy(false);
-      if (r.code === 0) { setStatus('Done', 'ok'); const out = {final:'out/final.mp4', preview:'out/preview.mp4', check:'out/report.txt'}[r.mode];
-        $('where').textContent = out ? `episodes/${r.ep}/${out}` : ''; }
-      else setStatus('Stopped or failed. See the log.', 'err');
-    }
+    if (r.lines.length) { const L = $('log'), atEnd = L.scrollTop + L.clientHeight >= L.scrollHeight - 30; L.textContent += (L.textContent ? '\n' : '') + r.lines.join('\n'); logSeen = r.total; if (atEnd) L.scrollTop = L.scrollHeight; }
+    if (!r.running) { clearInterval(polling); setBusy(false);
+      if (r.code === 0) { setStatus('Done', 'ok'); $('where').textContent = {final:`episodes/${r.ep}/out/final.mp4`, preview:`episodes/${r.ep}/out/preview.mp4`, check:'The report is in out/report.txt'}[r.mode] || ''; showOutputs(r.mode); }
+      else setStatus('Stopped or failed. See the log.', 'err'); }
   } catch (e) { clearInterval(polling); setBusy(false); setStatus(e.message, 'err'); }
 }
 function setBusy(b){ ['save','check','preview','final'].forEach(i => $(i).disabled = b); $('stop').classList.toggle('hidden', !b); }
 
+/* ---------- start ---------- */
 async function init(){
-  O = await api('/api/options');
-  $('projTitle').textContent = 'Raaga Thoram'; document.title = 'Raaga Thoram · Episode settings';
+  O = await api('/api/options'); document.title = 'Raaga Thoram · Episode settings';
   O.episodes.forEach(e => $('ep').add(new Option(e, e)));
   const last = localStorage.getItem('rt-ep'); if (last && O.episodes.includes(last)) $('ep').value = last;
-  O.variants.forEach(v => $('ragas').appendChild(new Option(v.charAt(0).toUpperCase() + v.slice(1))));
+  const th = localStorage.getItem('rt-theme'); if (th) document.documentElement.dataset.theme = th;
   slider('animFrac', 'animFracO', v => v + '% of the height'); slider('bgShift', 'bgShiftO', v => v + '%'); slider('lag', 'lagO', v => (v > 0 ? '+' : '') + v.toFixed(2) + ' s');
-  document.querySelectorAll('input,select,textarea').forEach(el => { if (!['ep'].includes(el.id)) el.addEventListener('input', mark); });
-  ['introOn'].forEach(id => $(id).addEventListener('input', drawPreview));
+  document.querySelectorAll('main input,main select,main textarea').forEach(el => { if (!el.closest('#ragaTable') && !el.closest('.speed')) el.addEventListener('input', mark); });
+  $('introOn').addEventListener('input', drawPreview);
+  $('raga').addEventListener('input', () => { drawScale(); refreshAnims(); });
+  $('showVariants').addEventListener('input', () => { drawScale(); refreshAnims(); });
+  $('exercise').addEventListener('input', () => { exCache = {}; refreshAnims(); });
   $('ep').onchange = () => { localStorage.setItem('rt-ep', $('ep').value); load(); };
-  $('newEp').onclick = async () => {
-    const n = prompt('Name for the new episode (letters, numbers, - and _), for example ep04'); if (!n) return;
+  $('themeBtn').onclick = () => { const d = document.documentElement; const cur = d.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); d.dataset.theme = cur === 'dark' ? 'light' : 'dark'; localStorage.setItem('rt-theme', d.dataset.theme); };
+  $('newEp').onclick = async () => { const n = prompt('Name for the new episode (letters, numbers, - and _), for example ep04'); if (!n) return;
     try { const r = await api('/api/new', {ep: n.trim()}); $('ep').innerHTML = ''; r.episodes.forEach(e => $('ep').add(new Option(e, e))); $('ep').value = n.trim(); localStorage.setItem('rt-ep', n.trim()); await load();
-      setStatus('Created. Put the master audio and cousin video in that folder, then reload this page.', 'ok'); } catch (e) { setStatus(e.message, 'err'); }
-  };
-  $('addPart').onclick = () => { const l = parts[parts.length - 1]; parts.push({speed: Math.min(3, (l ? l.speed : 0) + 1), style: l ? l.style : 'staircase', start: 0}); drawParts(); mark(); };
+      setStatus('Created. Copy the master audio and cousin video into the folder, then reload this page.', 'ok'); } catch (e) { setStatus(e.message, 'err'); } };
+  $('addPart').onclick = () => { const l = parts[parts.length - 1]; parts.push({speed: Math.min(3, (l ? l.speed : 0) + 1), style: l ? l.style : 'staircase', start: 0}); selPart = parts.length - 1; drawParts(); mark(); };
   $('addLine').onclick = () => { lines.push(''); drawLines(); mark(); };
+  $('moreT').onclick = () => { showAllT = !showAllT; drawTrans(); };
+  $('addRaga').onclick = () => { ragas['New raga'] = {notes: ['', '2', '3', '1', '', '2', '3', ''], check: 'please verify'}; drawRagaTable(); };
+  $('saveRagas').onclick = async () => { try { ragas = await api('/api/ragas', collectRagas()); fillRagas(); drawRagaTable(); const s = $('ragaStatus'); s.textContent = 'Saved'; s.className = 'pill ok'; refreshAnims(); } catch (e) { $('ragaStatus').textContent = e.message; } };
   $('save').onclick = () => save().catch(e => setStatus(e.message, 'err'));
-  $('check').onclick = () => run('check'); $('preview').onclick = () => run('preview'); $('final').onclick = () => run('final');
-  $('stop').onclick = () => api('/api/stop', {});
-  window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+  $('check').onclick = () => run('check'); $('preview').onclick = () => run('preview'); $('final').onclick = () => run('final'); $('stop').onclick = () => api('/api/stop', {});
+  const links = [...document.querySelectorAll('#steps a')], secs = links.map(a => document.querySelector(a.getAttribute('href')));
+  addEventListener('scroll', () => { let k = 0; secs.forEach((s, i) => { if (s.getBoundingClientRect().top < innerHeight * 0.4) k = i; }); links.forEach((a, i) => a.classList.toggle('on', i === k)); }, {passive: true});
+  addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
   await load();
   const r = await api('/api/log?since=0'); if (r.running) { setBusy(true); setStatus('Running…', 'run'); polling = setInterval(poll, 900); }
 }

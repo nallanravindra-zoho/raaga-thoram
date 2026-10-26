@@ -126,6 +126,12 @@ settings in the form, and press **Save**. The same page has **Check**, **Preview
 and show the progress underneath. **+ New** makes a new episode folder from the template; put the master audio and the cousin video
 in it, then reload the page.
 
+The left list jumps between the steps. Every animation and every title change-over has a live preview you can click, the letters can
+be English, Telugu or both (English with a small Telugu letter under it), and the finished preview or final video plays in the page.
+
+Ragas live in `content/ragas.json` (or "Edit the raga list" on the page): for each raga, which variant of each note it uses
+(R1/R2/R3, G1/G2/G3, M1/M2, D1/D2/D3, N1/N2/N3) and which notes it skips. A note a raga skips is dimmed in the staircase.
+
 It shows only the settings you change often: files, exercise and raga, the speeds and their animations, the look, how closely the
 animation follows her singing, the opening title (lines, colour, change-over), and hashtags. Rarely needed ones are under Advanced.
 

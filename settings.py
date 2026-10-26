@@ -25,7 +25,12 @@ RUN = {"proc": None, "lines": [], "mode": None, "ep": None, "code": None}
 LOCK = threading.Lock()
 
 sys.path.insert(0, str(HERE))
+sys.path.insert(0, str(HERE / "lib"))
 import raaga_thoram as rt  # noqa: E402
+import swarams  # noqa: E402
+
+RAGAS = HERE / "content" / "ragas.json"
+PREVIEWS = HERE / "ui" / "previews"
 
 
 def ep_dir(name):
@@ -46,6 +51,76 @@ def read_config(name):
 def list_files(name):
     d = ep_dir(name)
     return sorted(f.name for f in d.iterdir() if f.is_file() and f.suffix.lower() in MEDIA)
+
+
+def read_ragas():
+    return json.loads(RAGAS.read_text(encoding="utf-8")) if RAGAS.exists() else {}
+
+
+def save_ragas(data):
+    clean = {}
+    for k, v in data.items():
+        if k.startswith("_"):
+            clean[k] = v
+        elif isinstance(v, dict) and isinstance(v.get("notes"), list) and len(v["notes"]) == 8:
+            clean[str(k).strip()] = v
+    RAGAS.write_text(json.dumps(clean, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    return clean
+
+
+def exercise(n):
+    return swarams.exercise(rt.DEFAULTS["swaram_file"], int(n))
+
+
+STILL_LOCK = threading.Lock()
+
+
+def two_stills():
+    """Two pictures for the transition previews: the opening title and a frame from a finished video."""
+    from PIL import Image, ImageDraw
+    PREVIEWS.mkdir(exist_ok=True)
+    a, b = PREVIEWS / "A.png", PREVIEWS / "B.png"
+    with STILL_LOCK:
+        if not a.exists():
+            cache = HERE / "content" / "titles" / "cache"
+            intros = sorted(cache.glob("*540x960*.mp4"), key=lambda f: f.stat().st_mtime, reverse=True) if cache.exists() else []
+            for f in intros:
+                subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-ss", "3.6", "-i", str(f), "-frames:v", "1", "-vf", "scale=270:480", str(a)])
+                if a.exists():
+                    break
+        if not b.exists():
+            vids = sorted(EPISODES.glob("*/out/preview.mp4"), key=lambda f: f.stat().st_mtime, reverse=True)
+            for f in vids:
+                for ss in ("40", "12", "3"):
+                    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-ss", ss, "-i", str(f), "-frames:v", "1", "-vf", "scale=270:480", str(b)])
+                    if b.exists() and b.stat().st_size > 0:
+                        break
+                if b.exists():
+                    break
+        if not a.exists():
+            im = Image.new("RGB", (270, 480), (0, 0, 0)); ImageDraw.Draw(im).text((70, 230), "OPENING TITLE", fill=(190, 140, 255)); im.save(a)
+        if not b.exists():
+            im = Image.new("RGB", (270, 480), (22, 28, 80)); ImageDraw.Draw(im).text((80, 230), "THE VIDEO", fill=(230, 230, 255)); im.save(b)
+    return a, b
+
+
+TRANS_LOCK = threading.Lock()
+
+
+def transition_preview(name):
+    if not re.fullmatch(r"[a-z]{3,20}", name or ""):
+        raise ValueError("bad transition name")
+    out = PREVIEWS / f"t_{name}.mp4"
+    with TRANS_LOCK:
+        if not out.exists():
+            a, b = two_stills()
+            f = f"[0:v]fps=24,format=yuv420p,setsar=1[a];[1:v]fps=24,format=yuv420p,setsar=1[b];[a][b]xfade=transition={name}:duration=0.9:offset=0.6,format=yuv420p[v]"
+            r = subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-loop", "1", "-t", "2.4", "-i", str(a), "-loop", "1", "-t", "2.4", "-i", str(b),
+                                "-filter_complex", f, "-map", "[v]", "-t", "2.4", "-c:v", "libx264", "-crf", "30", "-preset", "veryfast", "-movflags", "+faststart", str(out)],
+                               capture_output=True, text=True)
+            if r.returncode != 0:
+                raise RuntimeError(r.stderr[-200:])
+    return f"/previews/t_{name}.mp4"
 
 
 def options():
@@ -115,6 +190,41 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def send_file(self, path, ctype):
+        path = Path(path)
+        if not path.is_file():
+            return self.send({"error": "not found"}, 404)
+        size = path.stat().st_size
+        start, end, code = 0, size - 1, 200
+        rng = self.headers.get("Range")
+        if rng and rng.startswith("bytes="):
+            a, _, b = rng[6:].partition("-")
+            start = int(a) if a else 0
+            end = int(b) if b else size - 1
+            end = min(end, size - 1)
+            code = 206
+        n = end - start + 1
+        self.send_response(code)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Accept-Ranges", "bytes")
+        self.send_header("Content-Length", str(n))
+        if code == 206:
+            self.send_header("Content-Range", f"bytes {start}-{end}/{size}")
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        with open(path, "rb") as f:
+            f.seek(start)
+            left = n
+            while left > 0:
+                chunk = f.read(min(65536, left))
+                if not chunk:
+                    break
+                try:
+                    self.wfile.write(chunk)
+                except (BrokenPipeError, ConnectionResetError):
+                    break
+                left -= len(chunk)
+
     def body(self):
         n = int(self.headers.get("Content-Length") or 0)
         return json.loads(self.rfile.read(n) or b"{}")
@@ -127,6 +237,23 @@ class Handler(BaseHTTPRequestHandler):
                 self.send(b"", 204, "image/x-icon")
             elif u.path == "/":
                 self.send(UI.read_bytes(), ctype="text/html")
+            elif u.path == "/render/render.html":
+                self.send_file(HERE / "render" / "render.html", "text/html; charset=utf-8")
+            elif u.path.startswith("/previews/"):
+                self.send_file(PREVIEWS / Path(u.path).name, "video/mp4" if u.path.endswith(".mp4") else "image/png")
+            elif u.path.startswith("/media/"):
+                _, _, name, rest = u.path.split("/", 3)
+                p = (ep_dir(name) / "out" / Path(rest).name)
+                self.send_file(p, "video/mp4" if p.suffix == ".mp4" else ("image/png" if p.suffix == ".png" else "text/plain; charset=utf-8"))
+            elif u.path == "/api/exercise":
+                self.send(exercise(q.get("n", 1)))
+            elif u.path == "/api/ragas":
+                self.send(read_ragas())
+            elif u.path == "/api/transition":
+                self.send({"url": transition_preview(q.get("name", ""))})
+            elif u.path == "/api/outputs":
+                d = ep_dir(q["ep"]) / "out"
+                self.send({n: (d / n).exists() for n in ("final.mp4", "preview.mp4", "cover.png", "caption.txt", "report.txt")})
             elif u.path == "/api/options":
                 self.send({**options(), "episodes": list_episodes()})
             elif u.path == "/api/config":
@@ -147,6 +274,8 @@ class Handler(BaseHTTPRequestHandler):
             data = self.body()
             if u.path == "/api/save":
                 self.send({"config": save_config(data["ep"], data["values"])})
+            elif u.path == "/api/ragas":
+                self.send(save_ragas(data))
             elif u.path == "/api/new":
                 new_episode(data["ep"])
                 self.send({"episodes": list_episodes()})

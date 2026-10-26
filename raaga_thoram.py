@@ -70,6 +70,20 @@ VARIANTS = {
 }
 
 
+def load_raga(name):
+    """(variants, present) for a raga from content/ragas.json, or (None, None). present[i] is False for notes the raga skips."""
+    try:
+        lib = json.load(open(HERE / "content" / "ragas.json", encoding="utf-8"))
+    except (OSError, ValueError):
+        lib = {}
+    key = re.sub(r"\s+", "", name or "").lower()
+    for k, v in lib.items():
+        if not k.startswith("_") and re.sub(r"\s+", "", k).lower() == key and isinstance(v.get("notes"), list) and len(v["notes"]) == 8:
+            return [("" if n is None else str(n)) for n in v["notes"]], [n is not None for n in v["notes"]]
+    v = VARIANTS.get(key)
+    return (v, None) if v else (None, None)
+
+
 def load_settings(ep_dir):
     p = ep_dir / "episode.json"
     if not p.exists():
@@ -82,8 +96,8 @@ def load_settings(ep_dir):
         sys.exit("speed must be 1, 2 or 3")
     if s["cousin_look"] not in ("cutout", "stacked", "background"):
         sys.exit('cousin_look must be "cutout", "stacked" or "background"')
-    if s["script"] not in ("latin", "telugu"):
-        sys.exit('script must be "latin" or "telugu"')
+    if s["script"] not in ("latin", "telugu", "both"):
+        sys.exit('script must be "latin", "telugu" or "both"')
     s["speed_tag"] = not s["title"]
     if not s["title"]:
         s["title"] = f'{s["raga"]} · Sarali Varisai {s["exercise"]}'
@@ -653,7 +667,8 @@ def main():
     cfg = {
         "style": S["style"], "script": S["script"], "title": S["title"], "speedTag": S["speed_tag"], "bpm": bpm,
         "parts": [{"style": p["style"], "speed": p["speed"], "npb": p["npb"], "start": p["start"], "end": p["end"], "knots": p["knots"]} for p in parts],
-        "exercise": ex, "variants": (S["variants"] or VARIANTS.get(S["raga"].lower().replace(" ", ""))) if S["show_variants"] else None,
+        "exercise": ex, "variants": (S["variants"] or load_raga(S["raga"])[0]) if S["show_variants"] else None,
+        "present": load_raga(S["raga"])[1],
         "scale": 3.0 * s, "designH": Ha / 3.0,
     }
     background = bool(clips) and S["cousin_look"] == "background"

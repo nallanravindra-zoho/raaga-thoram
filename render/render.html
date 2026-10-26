@@ -15,15 +15,28 @@ var ACT = ['Clap','1','2','3','Clap','Wave','Clap','Wave'];
 var PARTS = [], PK = [], PI = 0, telugu = false, SEQ = [], NPB = 1, BPM = 60, START = 0, CYCLES = [], LINES = [], LSTART = [], NOTE_PX = 44;
 
 var SUBS = { '1': '\u2081', '2': '\u2082', '3': '\u2083' };
-function lab(i){ var v = (CFG && CFG.variants && CFG.variants[i]) || ''; return (telugu ? TEL[i] : LAT[i]) + (SUBS[v] || v); }
+var both = false;   // script 'both': English letter with a small Telugu letter under it
+function lab(i){
+  var v = (CFG && CFG.variants && CFG.variants[i]) || '', sv = SUBS[v] || v;
+  if (both) return LAT[i] + sv + '\u0001' + TEL[i];
+  return (telugu ? TEL[i] : LAT[i]) + sv;
+}
 function col(i){ return 'hsl(' + ((i * 45 + 8) % 360) + ',82%,62%)'; }
 function fnt(sz, wt, tel){ return (wt || 400) + ' ' + sz + 'px ' + (tel ? "'Noto Sans Telugu','Telugu MN','Telugu Sangam MN'," : '') + "Manrope,'Helvetica Neue',Arial,sans-serif"; }
-function txt(s, x, y, sz, c, al, wt, tel){ g.font = fnt(sz, wt, tel); g.fillStyle = c; g.textAlign = al || 'left'; g.textBaseline = 'middle'; g.fillText(s, x, y); }
+function txt(s, x, y, sz, c, al, wt, tel){
+  var k = typeof s === 'string' ? s.indexOf('\u0001') : -1;
+  if (k >= 0) {   // two scripts: English on top, Telugu small underneath
+    txt(s.slice(0, k), x, y - sz * 0.2, sz * 0.86, c, al, wt, false);
+    g.save(); g.globalAlpha *= 0.8; txt(s.slice(k + 1), x, y + sz * 0.52, sz * 0.46, c, al, 700, true); g.restore();
+    return;
+  }
+  g.font = fnt(sz, wt, tel); g.fillStyle = c; g.textAlign = al || 'left'; g.textBaseline = 'middle'; g.fillText(s, x, y);
+}
 function rr(x, y, w, h, r){ g.beginPath(); g.roundRect(x, y, w, h, r); }
 function tl(sz){ return telugu ? sz * 0.78 : sz; }   // Telugu glyphs are wider, so draw them a little smaller
 
 window.initRender = async function(cfg){
-  CFG = cfg; telugu = cfg.script === 'telugu';
+  CFG = cfg; telugu = cfg.script === 'telugu'; both = cfg.script === 'both';
   SEQ = cfg.exercise.seq; CYCLES = cfg.exercise.cycles; LINES = cfg.exercise.lines; LSTART = cfg.exercise.lineStarts;
   BPM = cfg.bpm; PARTS = cfg.parts; pickPart(PARTS[0].start);
   S = cfg.scale; H = cfg.designH; CH = cfg.canvasH || cfg.designH;
@@ -106,7 +119,8 @@ function sB(st, R){
   function XY(i){ return [R.x + (i + 0.5) * pw, base - 26 - i * rise]; }
   for (var i = 0; i < 8; i++) {
     var p = XY(i), on = st.on && SEQ[n].i === i;
-    g.fillStyle = col(i); g.globalAlpha = on ? 1 : 0.45; if (on) { g.shadowColor = col(i); g.shadowBlur = 14; }
+    var absent = CFG.present && CFG.present[i] === false;
+    g.fillStyle = col(i); g.globalAlpha = on ? 1 : (absent ? 0.1 : 0.45); if (on) { g.shadowColor = col(i); g.shadowBlur = 14; }
     rr(p[0] - pw / 2 + 2, p[1], pw - 4, base - p[1] + 6, 5); g.fill(); g.shadowBlur = 0; g.globalAlpha = 1;
     txt(lab(i), p[0], p[1] + 15, tl(15), '#0a0e2a', 'center', 800, telugu);
   }

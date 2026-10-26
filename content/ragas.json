@@ -1,0 +1,9 @@
+{
+  "_help": "One entry per raga. notes: for S R G M P D N Ś, the variant number the raga uses (\"\" = plain note such as S or P, null = the raga does not use that note). Edit this file or use the Ragas panel on the settings page. 'check' says how sure the suggestion is: please have an expert verify them.",
+  "Kalyani":         {"melakarta": 65, "check": "sure",   "notes": ["", "2", "3", "2", "", "2", "3", ""]},
+  "Sankarabharanam": {"melakarta": 29, "check": "sure",   "notes": ["", "2", "3", "1", "", "2", "3", ""]},
+  "Mohana":          {"parent": "Harikambhoji", "check": "sure", "notes": ["", "2", "3", null, "", "2", null, ""]},
+  "Hamsadhvani":     {"parent": "Sankarabharanam", "check": "sure", "notes": ["", "2", "3", null, "", null, "3", ""]},
+  "Naatakuranji":    {"parent": "Kharaharapriya", "check": "please verify", "notes": ["", "2", "2", "1", "", "2", "2", ""]},
+  "Vasanta":         {"parent": "Mayamalavagowla", "check": "please verify", "notes": ["", "1", "3", "1", null, "1", "3", ""]}
+}
