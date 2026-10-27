@@ -265,7 +265,7 @@ def intro_preview(ep, vals):
     import hashlib
     import tempfile
     PREVIEWS.mkdir(exist_ok=True)
-    keys = ("intro_title", "intro_theme", "intro_seconds", "intro_transition", "intro_transition_seconds")
+    keys = ("intro_title", "intro_theme", "intro_seconds", "intro_transition", "intro_transition_seconds", "intro_dust")
     S2 = dict(rt.DEFAULTS)
     S2.update({k: vals[k] for k in keys if k in vals})
     S2["intro"] = True

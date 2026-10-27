@@ -48,6 +48,7 @@ DEFAULTS = {
     "intro_title": ["Ajanta", "Raaga Thoram"],
     "intro_theme": "purple",
     "intro_seconds": 5.0,
+    "intro_dust": 0.5,
     "intro_transition": "dissolve",
     "intro_transition_seconds": 0.8,
     "intro_audio": str(HERE / "content" / "titles" / "intro_audio.m4a"),
@@ -423,10 +424,10 @@ def add_intro(settings, main_path, out_path, s, report):
     title = "\n".join(title) if isinstance(title, list) else str(title)
     tag = re.sub(r"[^a-z0-9]+", "_", title.lower()).strip("_")
     theme_tag = re.sub(r"[^a-z0-9]+", "_", str(settings["intro_theme"]).lower()).strip("_")
-    intro = tdir / f"{tag}_{theme_tag}_{Wd}x{Hd}_{secs:g}s.mp4"
+    intro = tdir / f"{tag}_{theme_tag}_{Wd}x{Hd}_{secs:g}s_d{float(settings['intro_dust']):g}.mp4"
     if not intro.exists():
         cmd = [sys.executable, str(HERE / "tools" / "title_reveal" / "make_title.py"), title, str(intro),
-               "--theme", settings["intro_theme"], "--w", str(Wd), "--h", str(Hd), "--seconds", str(secs), "--fps", str(settings["fps"])]
+               "--theme", settings["intro_theme"], "--dust", str(settings["intro_dust"]), "--w", str(Wd), "--h", str(Hd), "--seconds", str(secs), "--fps", str(settings["fps"])]
         if Path(settings["intro_audio"]).exists():
             cmd += ["--audio", settings["intro_audio"]]
         r = subprocess.run(cmd, capture_output=True, text=True)

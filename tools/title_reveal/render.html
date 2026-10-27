@@ -68,7 +68,7 @@ async function initRender(cfg){
   // particles (deterministic)
   var r=rnd(11);P=[];
   var midY=top+((lines.length-1)*lh)/2-size*0.32, span=tx1-tx0;
-  var K=cfg.dust||1;
+  var K=(cfg.dust===undefined||cfg.dust===null)?1:cfg.dust;
   // bubbles: big soft bokeh and glassy rimmed bubbles, drifting upward all the way through
   for(var i=0;i<Math.round(120*K);i++){var bx=tx0-span*0.06+r()*span*1.12,big=r()<.25;
     P.push({k:'b',glass:r()<.45,x:bx,y:midY+(r()-.45)*size*(big?1.5:1.1),vx:(r()-.5)*36,vy:-14-r()*46,sw:r()*6.28,rad:size*(0.04+r()*r()*(big?0.42:0.2)),
@@ -139,9 +139,11 @@ function renderFrame(t){
   g.restore();
   // sparkle band: bokeh discs and dust
   g.save();g.globalCompositeOperation='lighter';
-  P.forEach(function(p){
+  // the sparkle fades away well before the end, so the last moments are the clear title only
+  var Tend=CFG.seconds||5, dustEnv=1-ease((t-Tend*0.5)/(Tend*0.28));
+  if(dustEnv>0) P.forEach(function(p){
     var u=(t-p.t0)/p.life; if(u<0||u>1)return;
-    var dt=t-p.t0, al=Math.sin(u*Math.PI)*p.a, x=p.x+p.vx*dt, y=p.y+p.vy*dt;
+    var dt=t-p.t0, al=Math.sin(u*Math.PI)*p.a*dustEnv, x=p.x+p.vx*dt, y=p.y+p.vy*dt;
     if(p.k==='b'){
       x+=Math.sin(t*1.6+p.sw)*S*0.06;
       var rg=g.createRadialGradient(x-p.rad*0.25,y-p.rad*0.25,p.rad*0.05,x,y,p.rad);

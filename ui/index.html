@@ -232,7 +232,8 @@ details summary{cursor:pointer;font-weight:800}
               <div class="sliderrow"><span>Lightness</span><input type="range" id="litRange" min="30" max="80" value="62"><b id="litO"></b></div>
               <div class="row"><span class="sw" id="customSw" style="cursor:default"></span><span class="hint" style="margin:0">Move the sliders and the title above changes.</span></div></details>
             <div class="grid" style="margin-top:14px"><label class="f"><span class="l">Seconds on screen</span><input type="number" id="introSecs" min="2" max="12" step="0.5"></label>
-            <label class="f"><span class="l">Change takes (seconds)</span><input type="number" id="transSecs" min="0.2" max="2.5" step="0.1"></label></div></div>
+            <label class="f"><span class="l">Change takes (seconds)</span><input type="number" id="transSecs" min="0.2" max="2.5" step="0.1"></label></div>
+            <div style="margin-top:14px"><span class="l">Sparkle dust <span style="color:var(--mute);font-weight:500">(it fades away before the end)</span></span><div class="slider"><input type="range" id="dustRange" min="0" max="150" step="5"><output id="dustO"></output></div></div></div>
         </div>
         <div class="preview-title" id="titlePrev"></div>
         <div class="intro-pv"><div><button class="teal" id="playIntro">▶ Play the whole opening</button>
@@ -539,7 +540,7 @@ async function load(){
   $('introOn').checked = val('intro', true);
   const it = val('intro_title', ['Ajanta', 'Raaga Thoram']); lines = Array.isArray(it) ? it.slice() : String(it).split('\n'); drawLines();
   theme = val('intro_theme', 'purple'); setCustomFrom(theme); drawSwatches(); $('introSecs').value = val('intro_seconds', 5); trans = val('intro_transition', 'dissolve'); drawTrans();
-  $('transSecs').value = val('intro_transition_seconds', 0.8); $('hashtags').value = val('hashtags', '');
+  $('transSecs').value = val('intro_transition_seconds', 0.8); $('dustRange').value = Math.round(val('intro_dust', 0.5) * 100); $('dustRange').dispatchEvent(new Event('input')); $('hashtags').value = val('hashtags', '');
   $('bpm').value = val('bpm', 'auto'); $('countIn').value = val('count_in_beats', 0); $('tol').value = cfg.follow_tolerance || ''; $('title').value = cfg.title || '';
   drawPreview(); drawExercise(); clean(); summary(); showOutputs(); setupInitialLog();
 }
@@ -551,7 +552,7 @@ function collect(){
     parts: ps, style: parts[0].style, speed: parts[0].speed, pattern_start: parts[0].start, cousin_look: look, animation_fraction: parseInt($('animFrac').value) / 100,
     bg_shift: parseInt($('bgShift').value) / 100, follow_voice: $('followVoice').checked, follow_mode: $('followMode').value, follow_lag: parseFloat($('lag').value),
     intro: $('introOn').checked, intro_title: lines.map(s => s.trim()).filter(Boolean), intro_theme: theme, intro_seconds: parseFloat($('introSecs').value),
-    intro_transition: trans, intro_transition_seconds: parseFloat($('transSecs').value), hashtags: $('hashtags').value.trim(), bpm: isNaN(bpm) ? 'auto' : bpm,
+    intro_transition: trans, intro_transition_seconds: parseFloat($('transSecs').value), intro_dust: parseInt($('dustRange').value) / 100, hashtags: $('hashtags').value.trim(), bpm: isNaN(bpm) ? 'auto' : bpm,
     count_in_beats: parseInt($('countIn').value || 0), follow_tolerance: $('tol').value ? parseFloat($('tol').value) : null, title: $('title').value.trim() || null};
 }
 async function save(){ await api('/api/save', {ep: $('ep').value, values: collect()}); clean(); setStatus('Saved', 'ok'); }
@@ -587,12 +588,12 @@ async function init(){
   O.episodes.forEach(e => $('ep').add(new Option(e, e)));
   const last = localStorage.getItem('rt-ep'); if (last && O.episodes.includes(last)) $('ep').value = last;
   const th = localStorage.getItem('rt-theme'); if (th) document.documentElement.dataset.theme = th;
-  slider('animFrac', 'animFracO', v => { refreshLooks(); return v + '% of the height'; }); slider('bgShift', 'bgShiftO', v => { refreshLooks(); return v + '%'; }); slider('lag', 'lagO', v => (v > 0 ? '+' : '') + v.toFixed(2) + ' s');
+  slider('dustRange', 'dustO', v => v === 0 ? 'none' : v + '%'); slider('animFrac', 'animFracO', v => { refreshLooks(); return v + '% of the height'; }); slider('bgShift', 'bgShiftO', v => { refreshLooks(); return v + '%'; }); slider('lag', 'lagO', v => (v > 0 ? '+' : '') + v.toFixed(2) + ' s');
   document.querySelectorAll('main input,main select,main textarea').forEach(el => { if (!el.closest('#ragaTable') && !el.closest('.speed')) el.addEventListener('input', mark); });
   $('introOn').addEventListener('input', drawPreview);
   $('playIntro').onclick = async () => { const b = $('playIntro'); b.disabled = true; $('introMsg').textContent = 'Making the preview… about 15 seconds.';
     try { const r = await api('/api/intro_preview', {ep: $('ep').value, values: {intro_title: lines.map(s => s.trim()).filter(Boolean), intro_theme: theme, intro_seconds: parseFloat($('introSecs').value),
-        intro_transition: trans, intro_transition_seconds: parseFloat($('transSecs').value)}});
+        intro_transition: trans, intro_transition_seconds: parseFloat($('transSecs').value), intro_dust: parseInt($('dustRange').value) / 100}});
       const v = $('introVid'); v.src = r.url + '?t=' + Date.now(); v.classList.remove('hidden'); v.play().catch(() => {}); $('introMsg').textContent = 'Change the colour, lines or change-over and press the button again to see the new one.'; }
     catch (e) { $('introMsg').textContent = 'Could not make it: ' + e.message; } b.disabled = false; };
   $('raga').addEventListener('input', async () => { exCache = {}; await fillExercises(); drawScale(); refreshAnims(); refreshLooks(); drawExercise(); summary(); });
