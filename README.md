@@ -150,3 +150,12 @@ The video starts with a title that sparkles in. It is set in `episode.json` (or 
 - `intro_theme`: gold, purple, silver, rosegold, emerald, ice, crimson.
 - `"intro": false` leaves the intro out.
 - To make a title on its own: `.venv/bin/python tools/title_reveal/make_title.py "Ajanta|Raaga Thoram" out.mp4 --theme purple --w 1080 --h 1920`
+
+## Options (most are hidden until you ask for them)
+
+- **Animations:** 12 styles (staircase, karaoke line, big note, falling notes, pitch trail, gauge, pad grid, arcs, ladder, piano keys,
+  ripple, flower) and 9 colour palettes for each speed (`"style"` and `"palette"` in `parts`).
+- **Title colours:** 55 ready-made colours, or your own from hue, strength and lightness (`"intro_theme": "hsl:270,80,62"`).
+- **Change-overs:** all 58 that ffmpeg can do, with a live preview of each.
+- **Notes a raga skips** (Mohana has no M or N, and so on): their names are never shown. The singers sing a long "aa" there, so the
+  screen shows "aa" (written `_` in the exercise files). The Cancel changes button on the settings page throws away unsaved edits.

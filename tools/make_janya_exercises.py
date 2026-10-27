@@ -32,11 +32,12 @@ def main():
     scale_dn = " ".join(f"{LAT[i]}{notes[i] or ''}" for i in range(7, -1, -1) if notes[i] is not None)
     out = [f"SARALI VARISAI FOR {key.upper()} RAGAM (derived from the Kalyani exercises)", "=" * 60, "",
            f"Raga: {key}", f"Scale going up:    {scale_up}", f"Scale coming down: {scale_dn}",
-           f"{key} has no {', '.join(sorted(absent, key=LAT.index))}. Wherever an exercise has one of those notes, the note before it is held",
-           "(a comma) so the rhythm, the 8-beat cycles and the speeds stay the same.",
+           f"{key} has no {', '.join(sorted(absent, key=LAT.index))}. Wherever an exercise has one of those notes the singer holds the note before it",
+           "and sings \"aa\" (shown as _), so the rhythm, the 8-beat cycles and the speeds stay the same.",
            "These exercises are DERIVED, not copied from a teacher's sheet: please have them checked.", "",
            "HOW TO READ",
            "  S R G P D   the notes;   Ś = the high Sa", "  ,   hold the note before it for one more beat",
+           "  _   a note this raga does not have: it is sung as a long \"aa\" (the screen shows aa, not a note name)",
            "  |   a break between parts of the tala", "  ||  the end of one cycle (avartanam) of 8 beats",
            "Tala: Adi talam = laghu (4 beats) + drutam (2) + drutam (2) = 8 beats.", "Each line is 16 beats = 2 cycles.",
            "Speeds: 1 note per beat, 2 per beat, 4 per beat (the beat tempo stays the same).", "=" * 60]
@@ -58,9 +59,9 @@ def main():
                     new_l, new_t = [], []
                     for k, a in enumerate(lat):
                         gone = a in absent
-                        new_l.append("," if gone else a)
+                        new_l.append("_" if gone else a)
                         if k < len(tail):
-                            new_t.append("," if gone else tail[k])
+                            new_t.append("_" if gone else tail[k])
                     out.append(lm.group(1) + " ".join(new_l))
                     pad = " " * len(lm.group(1))
                     out.append(pad + " ".join(new_t))

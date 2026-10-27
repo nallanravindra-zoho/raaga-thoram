@@ -17,7 +17,8 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE / "lib"))
 import audio, swarams, follow  # noqa: E402
 
-STYLES = ["staircase", "karaoke", "bignote", "falling", "pitchtrail", "gauge", "pads", "arcs"]
+STYLES = ["staircase", "karaoke", "bignote", "falling", "pitchtrail", "gauge", "pads", "arcs", "ladder", "piano", "ripple", "flower"]
+PALETTES = ["rainbow", "neon", "pastel", "sunset", "ocean", "forest", "gold", "violet", "mono"]
 NPB = {1: 1, 2: 2, 3: 4}
 DEFAULTS = {
     "master": "master.wav",
@@ -40,6 +41,7 @@ DEFAULTS = {
     "animation_fraction": 0.45,
     "face_focus": 0.3,
     "cousin_look": "cutout",
+    "palette": "rainbow",
     "parts": None,
     "bg_shift": 0.30,
     "intro": True,
@@ -420,7 +422,8 @@ def add_intro(settings, main_path, out_path, s, report):
     title = settings["intro_title"]
     title = "\n".join(title) if isinstance(title, list) else str(title)
     tag = re.sub(r"[^a-z0-9]+", "_", title.lower()).strip("_")
-    intro = tdir / f"{tag}_{settings['intro_theme']}_{Wd}x{Hd}_{secs:g}s.mp4"
+    theme_tag = re.sub(r"[^a-z0-9]+", "_", str(settings["intro_theme"]).lower()).strip("_")
+    intro = tdir / f"{tag}_{theme_tag}_{Wd}x{Hd}_{secs:g}s.mp4"
     if not intro.exists():
         cmd = [sys.executable, str(HERE / "tools" / "title_reveal" / "make_title.py"), title, str(intro),
                "--theme", settings["intro_theme"], "--w", str(Wd), "--h", str(Hd), "--seconds", str(secs), "--fps", str(settings["fps"])]
@@ -556,7 +559,10 @@ def main():
         st_ = pd.get("style", S["style"])
         if st_ not in STYLES:
             sys.exit(f'style "{st_}" is not one of: {", ".join(STYLES)}')
-        pt = {"pd": pd, "style": st_, "speed": sp, "npb": NPB[sp], "start": sub["pattern_start"], "sub": sub, "manual": bool(sub["line_times"] or sub["cycle_times"]),
+        pal = pd.get("palette", S["palette"])
+        if pal not in PALETTES:
+            sys.exit(f'palette "{pal}" is not one of: {", ".join(PALETTES)}')
+        pt = {"pd": pd, "palette": pal, "style": st_, "speed": sp, "npb": NPB[sp], "start": sub["pattern_start"], "sub": sub, "manual": bool(sub["line_times"] or sub["cycle_times"]),
               "dur": len(ex["seq"]) / NPB[sp] * beat}
         pt["knots"] = sync_knots(sub, ex, NPB[sp], bpm)
         if pt["knots"]:
@@ -683,7 +689,7 @@ def main():
     Ha = (int(round(1920 * S["animation_fraction"] / 2)) // 1) * 2
     cfg = {
         "style": S["style"], "script": S["script"], "title": S["title"], "speedTag": S["speed_tag"], "bpm": bpm,
-        "parts": [{"style": p["style"], "speed": p["speed"], "npb": p["npb"], "start": p["start"], "end": p["end"], "knots": p["knots"]} for p in parts],
+        "parts": [{"style": p["style"], "palette": p["palette"], "speed": p["speed"], "npb": p["npb"], "start": p["start"], "end": p["end"], "knots": p["knots"]} for p in parts],
         "exercise": ex, "variants": (S["variants"] or load_raga(S["raga"])[0]) if S["show_variants"] else None,
         "present": load_raga(S["raga"])[1],
         "scale": 3.0 * s, "designH": Ha / 3.0,

@@ -170,7 +170,7 @@ def _anim_pngs(cfgs, t=3.2):
     return [Image.open(io.BytesIO(base64.b64decode(d))).convert("RGBA") for d in _PW.submit(work).result()]
 
 
-def look_previews(ep, frac, shift, style, script, raga, speed):
+def look_previews(ep, frac, shift, style, script, raga, speed, palette="rainbow"):
     """Pictures of how each look will be laid out, built from one frame of the cousin's video. Returns {look: png bytes}."""
     import io
     import tempfile
@@ -201,7 +201,7 @@ def look_previews(ep, frac, shift, style, script, raga, speed):
     key = re.sub(r"\s+", "", raga or "").lower()
     notes = next((v["notes"] for k, v in lib.items() if not k.startswith("_") and re.sub(r"\s+", "", k).lower() == key), None)
     base = {"style": style, "script": script, "title": raga or "", "speedTag": False, "bpm": 100, "exercise": ex,
-            "parts": [{"style": style, "speed": speed, "npb": {1: 1, 2: 2, 3: 4}.get(speed, 1), "start": 0.5, "end": 1e6, "knots": None}],
+            "parts": [{"style": style, "palette": palette, "speed": speed, "npb": {1: 1, 2: 2, 3: 4}.get(speed, 1), "start": 0.5, "end": 1e6, "knots": None}],
             "variants": [("" if n is None else str(n)) for n in notes] if notes else None, "present": [n is not None for n in notes] if notes else None,
             "scale": 0.75}
     import numpy as np
@@ -289,15 +289,42 @@ def intro_preview(ep, vals):
     return f"/previews/{out.name}"
 
 
+def xfade_names():
+    """Every change-over the installed ffmpeg can do."""
+    r = subprocess.run(["ffmpeg", "-hide_banner", "-h", "filter=xfade"], capture_output=True, text=True)
+    names, on = [], False
+    for ln in (r.stdout + r.stderr).splitlines():
+        t = ln.split()
+        if t and t[0] == "transition":
+            on = True
+            continue
+        if on:
+            if not t or t[0] in ("duration", "offset", "expr"):
+                if t and t[0] in ("duration", "offset"):
+                    break
+                continue
+            if re.fullmatch(r"[a-z]+", t[0]) and t[0] not in ("custom",):
+                names.append(t[0])
+    return names
+
+
+def theme_presets():
+    out = [{"id": n, "name": n.replace("rosegold", "Rose gold").capitalize()} for n in ("gold", "purple", "silver", "rosegold", "emerald", "ice", "crimson")]
+    hues = [("Red", 0), ("Orange", 28), ("Amber", 45), ("Yellow", 58), ("Lime", 85), ("Green", 120), ("Mint", 152), ("Teal", 175), ("Cyan", 190),
+            ("Sky", 205), ("Blue", 225), ("Indigo", 250), ("Violet", 270), ("Magenta", 305), ("Pink", 330), ("Rose", 348)]
+    for tone, s, l in (("bright", 90, 62), ("deep", 78, 48), ("soft", 55, 76)):
+        for nm, h in hues:
+            out.append({"id": f"hsl:{h},{s},{l}", "name": f"{nm} ({tone})", "h": h, "s": s, "l": l})
+    return out
+
+
 def options():
     return {
         "defaults": {k: v for k, v in rt.DEFAULTS.items() if k not in ("swaram_file", "intro_audio")},
-        "styles": rt.STYLES,
+        "styles": rt.STYLES, "palettes": rt.PALETTES,
         "variants": sorted(rt.VARIANTS),
-        "transitions": ["fade", "dissolve", "fadeblack", "fadewhite", "zoomin", "circleopen", "circleclose", "radial", "smoothup",
-                        "smoothleft", "slideup", "slideleft", "pixelize", "hblur", "squeezeh", "wipeleft", "wiperight", "wipeup",
-                        "coverleft", "revealleft", "distance", "fadegrays", "horzopen", "vertopen"],
-        "themes": ["gold", "purple", "silver", "rosegold", "emerald", "ice", "crimson"],
+        "transitions": xfade_names(),
+        "themes": theme_presets(),
     }
 
 
@@ -423,7 +450,7 @@ class Handler(BaseHTTPRequestHandler):
                 import base64
                 with LOOK_LOCK:
                     res = look_previews(q["ep"], float(q.get("frac", 0.45)), float(q.get("shift", 0.3)),
-                                        q.get("style", "staircase"), q.get("script", "latin"), q.get("raga", ""), int(q.get("speed", 1)))
+                                        q.get("style", "staircase"), q.get("script", "latin"), q.get("raga", ""), int(q.get("speed", 1)), q.get("palette", "rainbow"))
                 self.send({k: "data:image/png;base64," + base64.b64encode(v).decode() for k, v in res.items()})
             elif u.path == "/api/outputs":
                 d = ep_dir(q["ep"]) / "out"

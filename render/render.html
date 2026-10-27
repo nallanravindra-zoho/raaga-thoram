@@ -17,11 +17,29 @@ var PARTS = [], PK = [], PI = 0, telugu = false, SEQ = [], NPB = 1, BPM = 60, ST
 var SUBS = { '1': '\u2081', '2': '\u2082', '3': '\u2083' };
 var both = false;   // script 'both': English letter with a small Telugu letter under it
 function lab(i){
+  if (CFG && CFG.present && CFG.present[i] === false) return '';      // the raga does not use this note: never write its name
   var v = (CFG && CFG.variants && CFG.variants[i]) || '', sv = SUBS[v] || v;
   if (both) return LAT[i] + sv + '\u0001' + TEL[i];
   return (telugu ? TEL[i] : LAT[i]) + sv;
 }
-function col(i){ return 'hsl(' + ((i * 45 + 8) % 360) + ',82%,62%)'; }
+/* a note the raga skips is sung as a long 'aa': show that, not the note's name */
+function AAL(){ return both ? 'aa\u0001\u0C06' : (telugu ? '\u0C06' : 'aa'); }
+function labN(n){ return SEQ[n] && SEQ[n].aa ? AAL() : lab(SEQ[n].i); }
+
+/* colours for the eight notes; a speed can pick its own palette */
+var PALETTES = {
+  rainbow: [0,1,2,3,4,5,6,7].map(function(i){ return 'hsl(' + ((i * 45 + 8) % 360) + ',82%,62%)'; }),
+  neon:    [0,1,2,3,4,5,6,7].map(function(i){ return 'hsl(' + ((i * 45 + 20) % 360) + ',100%,62%)'; }),
+  pastel:  [0,1,2,3,4,5,6,7].map(function(i){ return 'hsl(' + ((i * 45 + 8) % 360) + ',72%,80%)'; }),
+  sunset:  ['#ff6b6b','#ff8e53','#ffb347','#ffd166','#f78fb3','#e056fd','#a66cff','#7d8bff'],
+  ocean:   ['#4dd0e1','#26c6da','#4fc3f7','#64b5f6','#7986cb','#5c9ce6','#80deea','#a5f3fc'],
+  forest:  ['#a5d66b','#8bc34a','#66bb6a','#4db6ac','#9ccc65','#c5e1a5','#d4e157','#f0f4a3'],
+  gold:    ['#ffe29a','#ffd36b','#ffc23d','#f5b325','#ffd27f','#ffcf5c','#ffe7a8','#fff0c4'],
+  violet:  ['#d7b8ff','#c79bff','#b57dff','#a366f5','#8f8bff','#7aa5ff','#5fd6d0','#9af0e6'],
+  mono:    ['#ffffff','#e4e7ff','#cfd4ff','#bcc3ff','#a9b2ff','#9aa4f0','#8b95e0','#f1f3ff']
+};
+var PAL = PALETTES.rainbow;
+function col(i){ return PAL[i]; }
 function fnt(sz, wt, tel){ return (wt || 400) + ' ' + sz + 'px ' + (tel ? "'Noto Sans Telugu','Telugu MN','Telugu Sangam MN'," : '') + "Manrope,'Helvetica Neue',Arial,sans-serif"; }
 function txt(s, x, y, sz, c, al, wt, tel){
   var k = typeof s === 'string' ? s.indexOf('\u0001') : -1;
@@ -58,7 +76,7 @@ window.initRender = async function(cfg){
 function pickPart(t){
   var k = 0;
   for (var i = 1; i < PARTS.length; i++) if (t >= Math.max(Math.min(PARTS[i - 1].end, PARTS[i].start - 0.5), PARTS[i].start - 3.5)) k = i;
-  PI = k; NPB = PARTS[k].npb; START = PARTS[k].start; PK = PARTS[k].knots || [];
+  PI = k; PAL = PALETTES[PARTS[k].palette || (CFG && CFG.palette) || 'rainbow'] || PALETTES.rainbow; NPB = PARTS[k].npb; START = PARTS[k].start; PK = PARTS[k].knots || [];
 }
 function xOf(t){
   var rate = NPB * BPM / 60, K = PK;
@@ -102,8 +120,8 @@ function thisBeat(st, cx, y, cw, ch){
     g.fillStyle = on ? col(SEQ[m].i) : 'rgba(142,152,214,.16)';
     if (on) { g.shadowColor = col(SEQ[m].i); g.shadowBlur = 10; }
     rr(x, y, cw, ch, 8); g.fill(); g.shadowBlur = 0;
-    txt(lab(SEQ[m].i), x + cw / 2, y + ch / 2 + 1, tl(15), on ? '#0a0e2a' : (done ? '#e9ebff' : 'rgba(142,152,214,.7)'), 'center', 800, telugu);
-    if (SEQ[m].rep) txt('↺', x + cw - 5, y + 6, 8, on ? '#0a0e2a' : MUTE, 'center', 700);
+    txt(labN(m), x + cw / 2, y + ch / 2 + 1, tl(15), on ? '#0a0e2a' : (done ? '#e9ebff' : 'rgba(142,152,214,.7)'), 'center', 800, telugu);
+    if (SEQ[m].rep && !SEQ[m].aa) txt('↺', x + cw - 5, y + 6, 8, on ? '#0a0e2a' : MUTE, 'center', 700);
   }
 }
 function upDown(n){ return n < SEQ.length / 2 ? ['Going up', VIO] : ['Coming down', TEAL]; }
@@ -112,8 +130,8 @@ function upDown(n){ return n < SEQ.length / 2 ? ['Going up', VIO] : ['Coming dow
 function sB(st, R){
   var n = st.n, cur = SEQ[n].i, ud = upDown(n);
   txt(ud[0], R.x + 56, R.y + 6, 9.5, ud[1], 'center', 700);
-  txt(lab(cur), R.x + 56, R.y + 44, tl(44), col(cur), 'center', 800, telugu);
-  if (SEQ[n].rep && st.on) txt('repeat', R.x + 56, R.y + 74, 9, MUTE, 'center', 600);
+  txt(labN(n), R.x + 56, R.y + 44, tl(44), col(cur), 'center', 800, telugu);
+  if (SEQ[n].rep && !SEQ[n].aa && st.on) txt('repeat', R.x + 56, R.y + 74, 9, MUTE, 'center', 600);
   thisBeat(st, R.x + R.w * 0.66, R.y + 22, 32, 30);
   var base = R.y + R.h, rise = (R.h - 120) / 7, pw = R.w / 8;
   function XY(i){ return [R.x + (i + 0.5) * pw, base - 26 - i * rise]; }
@@ -150,8 +168,8 @@ function sA(st, R){
         if (on) {
           var sc = 1 + .12 * Math.sin(st.f * Math.PI); g.save(); g.translate(x + 15.5, y); g.scale(sc, sc);
           g.fillStyle = col(s.i); g.shadowColor = col(s.i); g.shadowBlur = 14; rr(-14, -21, 28, 42, 9); g.fill(); g.shadowBlur = 0;
-          txt(lab(s.i), 0, 1, tl(21), '#0a0e2a', 'center', 800, telugu); g.restore();
-        } else txt(s.rep ? '·' : lab(s.i), x + 15.5, y, s.rep ? 20 : tl(19), done ? '#e9ebff' : 'rgba(142,152,214,.6)', 'center', 700, telugu && !s.rep);
+          txt(labN(it.n), 0, 1, tl(21), '#0a0e2a', 'center', 800, telugu); g.restore();
+        } else txt(s.aa ? AAL() : (s.rep ? '·' : lab(s.i)), x + 15.5, y, (s.rep && !s.aa) ? 20 : tl(19), done ? '#e9ebff' : 'rgba(142,152,214,.6)', 'center', 700, telugu && !s.rep);
       }
       x += wd[ix];
     });
@@ -164,12 +182,12 @@ function sC(st, R){
   var cy = R.y + R.h * 0.40;
   var gr = g.createRadialGradient(W / 2, cy, 8, W / 2, cy, 150); gr.addColorStop(0, cc); gr.addColorStop(1, 'rgba(10,14,42,0)');
   g.globalAlpha = st.on ? .5 * (1 - .5 * st.f) : .2; g.fillStyle = gr; g.fillRect(R.x, R.y, R.w, R.h); g.globalAlpha = 1;
-  g.save(); g.translate(W / 2, cy); g.scale(s, s); txt(lab(i), 0, 0, tl(size), cc, 'center', 800, telugu); g.restore();
+  g.save(); g.translate(W / 2, cy); g.scale(s, s); txt(labN(n), 0, 0, tl(size), cc, 'center', 800, telugu); g.restore();
   txt('Next', R.x + 10, R.y + R.h - 44, 9, MUTE, 'left', 600);
   for (var k = 1; k <= 7; k++) {
     var m = n + k; if (m >= SEQ.length) break; var x = R.x + 44 + (k - 1) * 40;
     g.fillStyle = col(SEQ[m].i); g.globalAlpha = 1 - k * .1; rr(x - 17, R.y + R.h - 36, 34, 34, 8); g.fill(); g.globalAlpha = 1;
-    txt(lab(SEQ[m].i), x, R.y + R.h - 18, tl(15), '#0a0e2a', 'center', 800, telugu);
+    txt(labN(m), x, R.y + R.h - 18, tl(15), '#0a0e2a', 'center', 800, telugu);
   }
 }
 
@@ -211,10 +229,10 @@ function sE(st, R){
     var on = st.on && n === st.n, past = n < st.n || st.done;
     g.fillStyle = col(SEQ[n].i); g.globalAlpha = on ? 1 : (past ? .4 : .85); if (on) { g.shadowColor = col(SEQ[n].i); g.shadowBlur = 14; }
     rr(x - 15, y - 8, 30, 16, 8); g.fill(); g.shadowBlur = 0; g.globalAlpha = 1;
-    if (!past || on) txt(lab(SEQ[n].i), x, y + 0.5, tl(10.5), '#0a0e2a', 'center', 800, telugu);
+    if (!past || on) txt(labN(n), x, y + 0.5, tl(10.5), '#0a0e2a', 'center', 800, telugu);
   }
   g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 1.2; g.setLineDash([4, 5]); g.beginPath(); g.moveTo(hx, R.y); g.lineTo(hx, R.y + R.h); g.stroke(); g.setLineDash([]);
-  txt(lab(SEQ[st.n].i), R.x + R.w - 36, R.y + 28, tl(34), col(SEQ[st.n].i), 'center', 800, telugu);
+  txt(labN(st.n), R.x + R.w - 36, R.y + 28, tl(34), col(SEQ[st.n].i), 'center', 800, telugu);
 }
 
 /* ---------- F. needle gauge ---------- */
@@ -231,7 +249,7 @@ function sF(st, R){
   g.strokeStyle = '#fff'; g.lineWidth = 3.5; g.lineCap = 'round'; g.shadowColor = col(SEQ[n].i); g.shadowBlur = 12;
   g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.cos(a) * (R0 - 8), cy - Math.sin(a) * (R0 - 8)); g.stroke(); g.shadowBlur = 0;
   g.fillStyle = '#fff'; g.beginPath(); g.arc(cx, cy, 8, 0, 7); g.fill(); g.fillStyle = col(SEQ[n].i); g.beginPath(); g.arc(cx, cy, 4, 0, 7); g.fill();
-  txt(lab(SEQ[n].i), cx, cy - R0 * 0.42, tl(48), col(SEQ[n].i), 'center', 800, telugu);
+  txt(labN(n), cx, cy - R0 * 0.42, tl(48), col(SEQ[n].i), 'center', 800, telugu);
 }
 
 /* ---------- G. pad grid ---------- */
@@ -277,7 +295,64 @@ function sH(st, R){
   }
 }
 
-var STYLES = { staircase: sB, karaoke: sA, bignote: sC, falling: sD, pitchtrail: sE, gauge: sF, pads: sG, arcs: sH };
+/* ---------- I. ladder ---------- */
+function sI(st, R){
+  var n = st.n, cur = SEQ[n].i, ud = upDown(n);
+  txt(ud[0], R.x + 56, R.y + 8, 9.5, ud[1], 'center', 700);
+  txt(labN(n), R.x + 56, R.y + 62, tl(44), col(cur), 'center', 800, telugu);
+  thisBeat(st, R.x + 56, R.y + R.h - 50, 30, 28);
+  var top = R.y + 10, bot = R.y + R.h - 4, rh = (bot - top) / 8, x0 = R.x + 130, w = R.w - 140;
+  for (var i = 0; i < 8; i++) {
+    var y = bot - (i + 1) * rh, on = st.on && cur === i, absent = CFG.present && CFG.present[i] === false;
+    g.globalAlpha = on ? 1 : (absent ? 0.12 : 0.4); g.fillStyle = col(i); if (on) { g.shadowColor = col(i); g.shadowBlur = 14; }
+    rr(x0, y + 2, w, rh - 4, 7); g.fill(); g.shadowBlur = 0; g.globalAlpha = 1;
+    txt(lab(i), x0 - 22, y + rh / 2, tl(15), on ? col(i) : MUTE, 'center', 800, telugu);
+  }
+  var ip = n > 0 ? SEQ[n - 1].i : cur, f = st.on ? Math.min(st.f * st.dur / Math.min(0.2, st.dur * 0.62), 1) : 1;
+  var yA = bot - (ip + .5) * rh, yB = bot - (cur + .5) * rh, y = yA + (yB - yA) * f;
+  g.fillStyle = '#fff'; g.shadowColor = col(cur); g.shadowBlur = 14; g.beginPath(); g.arc(x0 + w - 18, y, 9, 0, 7); g.fill(); g.shadowBlur = 0;
+  g.fillStyle = col(cur); g.beginPath(); g.arc(x0 + w - 18, y, 4.5, 0, 7); g.fill();
+}
+
+/* ---------- J. piano ---------- */
+function sJ(st, R){
+  var n = st.n, cur = SEQ[n].i, ud = upDown(n), kw = R.w / 8, ky = R.y + 104, kh = R.h - 112;
+  txt(ud[0], R.x + R.w / 2, R.y + 8, 9.5, ud[1], 'center', 700);
+  txt(labN(n), R.x + R.w / 2, R.y + 56, tl(50), col(cur), 'center', 800, telugu);
+  for (var i = 0; i < 8; i++) {
+    var on = st.on && cur === i, absent = CFG.present && CFG.present[i] === false, press = on ? 7 : 0;
+    g.fillStyle = on ? col(i) : 'rgba(235,238,255,' + (absent ? 0.08 : 0.9) + ')'; if (on) { g.shadowColor = col(i); g.shadowBlur = 16; }
+    rr(R.x + i * kw + 2, ky + press, kw - 4, kh - press, 8); g.fill(); g.shadowBlur = 0;
+    txt(lab(i), R.x + i * kw + kw / 2, ky + kh - 20 + press, tl(15), '#0a0e2a', 'center', 800, telugu);
+  }
+}
+
+/* ---------- K. ripple ---------- */
+function sK(st, R){
+  var n = st.n, cur = SEQ[n].i, cx = R.x + R.w / 2, cy = R.y + R.h * 0.44, f = st.on ? st.f : 1, ud = upDown(n);
+  txt(ud[0], cx, R.y + 8, 9.5, ud[1], 'center', 700);
+  for (var k = 0; k < 3; k++) { var p = (f + k / 3) % 1; g.strokeStyle = col(cur); g.globalAlpha = (1 - p) * 0.5; g.lineWidth = 3; g.beginPath(); g.arc(cx, cy, 34 + p * 84, 0, 7); g.stroke(); }
+  g.globalAlpha = 1;
+  var gr = g.createRadialGradient(cx, cy, 5, cx, cy, 80); gr.addColorStop(0, col(cur)); gr.addColorStop(1, 'rgba(10,14,42,0)');
+  g.globalAlpha = .32; g.fillStyle = gr; g.fillRect(cx - 100, cy - 100, 200, 200); g.globalAlpha = 1;
+  var sc = 1 + .08 * Math.sin(Math.min(f * 2, 1) * Math.PI); g.save(); g.translate(cx, cy); g.scale(sc, sc); txt(labN(n), 0, 0, tl(76), col(cur), 'center', 800, telugu); g.restore();
+  for (var i = 0; i < 8; i++) { var x = R.x + 26 + i * (R.w - 52) / 7, on = st.on && cur === i, ab = CFG.present && CFG.present[i] === false;
+    g.globalAlpha = ab ? .15 : (on ? 1 : .45); g.fillStyle = col(i); g.beginPath(); g.arc(x, R.y + R.h - 16, on ? 8 : 5, 0, 7); g.fill(); g.globalAlpha = 1; }
+}
+
+/* ---------- L. flower ---------- */
+function sL(st, R){
+  var n = st.n, cur = SEQ[n].i, cx = R.x + R.w / 2, cy = R.y + R.h * 0.52, rad = Math.min(R.w, R.h) * 0.36;
+  for (var i = 0; i < 8; i++) {
+    var a = -Math.PI / 2 + i * Math.PI / 4, on = st.on && cur === i, ab = CFG.present && CFG.present[i] === false, px = cx + Math.cos(a) * rad, py = cy + Math.sin(a) * rad, r = on ? 31 : 22;
+    g.globalAlpha = on ? 1 : (ab ? .1 : .5); g.fillStyle = col(i); if (on) { g.shadowColor = col(i); g.shadowBlur = 16; }
+    g.beginPath(); g.arc(px, py, r, 0, 7); g.fill(); g.shadowBlur = 0; g.globalAlpha = 1;
+    txt(lab(i), px, py + 1, tl(on ? 17 : 14), '#0a0e2a', 'center', 800, telugu);
+  }
+  txt(labN(n), cx, cy, tl(42), col(cur), 'center', 800, telugu);
+}
+
+var STYLES = { staircase: sB, karaoke: sA, bignote: sC, falling: sD, pitchtrail: sE, gauge: sF, pads: sG, arcs: sH, ladder: sI, piano: sJ, ripple: sK, flower: sL };
 
 window.renderFrame = function(t){
   pickPart(t);

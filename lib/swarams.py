@@ -2,7 +2,7 @@
 import re
 
 SW = {"S": 0, "R": 1, "G": 2, "M": 3, "P": 4, "D": 5, "N": 6, "Ś": 7}
-LINE = re.compile(r"\s+(up\+down|up|down|line \d+)\s+([SRGMPDNŚ,].*)$")
+LINE = re.compile(r"\s+(up\+down|up|down|line \d+)\s+([SRGMPDNŚ,_].*)$")
 LABEL = {"up+down": "Whole line", "up": "Going up", "down": "Coming down"}
 
 
@@ -31,7 +31,9 @@ def parse_file(path):
                 if not toks:
                     continue
                 for t in toks:
-                    if t == ",":
+                    if t == "_":                       # a note this raga does not have: sung as a long "aa"
+                        notes.append({"i": prev, "rep": True, "aa": True})
+                    elif t == ",":
                         notes.append({"i": prev, "rep": True})
                     else:
                         prev = SW[t]

@@ -111,6 +111,14 @@ table.rg select,table.rg input{padding:5px 6px;border-radius:8px}
 .float{position:fixed;right:18px;bottom:18px;z-index:10;display:flex;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 12px;box-shadow:0 10px 30px rgba(40,20,90,.25)}
 .dirty{color:var(--bad);font-weight:700;font-size:13px}
 .hidden{display:none!important}
+.sw.custom{background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red)}
+.sliderrow{display:grid;grid-template-columns:90px 1fr 46px;gap:10px;align-items:center;margin:6px 0}
+.sliderrow input[type=range]{width:100%}
+#hueRange{background:linear-gradient(90deg,hsl(0,90%,60%),hsl(60,90%,60%),hsl(120,90%,60%),hsl(180,90%,60%),hsl(240,90%,60%),hsl(300,90%,60%),hsl(360,90%,60%));height:10px;border-radius:99px;appearance:none;outline:none}
+#hueRange::-webkit-slider-thumb{appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;border:3px solid var(--accent);box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.morebtn{margin-top:10px}
+.chipcol{display:flex;gap:3px;margin:2px 0 0}
+.chipcol i{display:block;width:12px;height:12px;border-radius:50%}
 .info{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:800;cursor:pointer;margin-left:6px;vertical-align:middle;position:relative;border:0;padding:0}
 .pop{position:absolute;z-index:20;left:0;top:30px;width:min(520px,86vw);background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 40px rgba(40,20,90,.3);padding:14px;font-weight:500;text-align:left;cursor:default}
 .exbox{margin-top:14px;border:1px solid var(--line);border-radius:14px;background:var(--field);padding:12px 14px}
@@ -185,7 +193,7 @@ details summary{cursor:pointer;font-weight:800}
       <p class="hint">One row each time she sings the exercise. Say roughly where she starts (in seconds, in the master audio); the tool finds the exact moment itself. The moving picture shows how the animation will look.</p>
       <div class="speeds" id="parts"></div>
       <div class="row" style="margin:12px 0"><button class="small" id="addPart">+ Add a speed</button></div>
-      <details open><summary>All animations (click one to use it for the highlighted speed)</summary><div class="gallery" id="gallery"></div></details>
+      <details open><summary>All animations (click one to use it for the highlighted speed)</summary><div class="gallery" id="gallery"></div><button class="small morebtn" id="moreAnim">Show more animations</button></details>
     </section>
 
     <section class="card" id="s4">
@@ -217,6 +225,12 @@ details summary{cursor:pointer;font-weight:800}
         <div class="grid">
           <div><span class="l">Title lines (each box is one line)</span><div id="lines"></div><button class="small" id="addLine">+ Add a line</button></div>
           <div><span class="l">Colour</span><div class="swatches" id="swatches"></div>
+            <button class="small morebtn" id="moreC">Show all colours</button>
+            <details id="customCol" style="margin-top:10px"><summary>Make your own colour</summary>
+              <div class="sliderrow"><span>Colour</span><input type="range" id="hueRange" min="0" max="360" value="270"><b id="hueO"></b></div>
+              <div class="sliderrow"><span>Strength</span><input type="range" id="satRange" min="10" max="100" value="80"><b id="satO"></b></div>
+              <div class="sliderrow"><span>Lightness</span><input type="range" id="litRange" min="30" max="80" value="62"><b id="litO"></b></div>
+              <div class="row"><span class="sw" id="customSw" style="cursor:default"></span><span class="hint" style="margin:0">Move the sliders and the title above changes.</span></div></details>
             <div class="grid" style="margin-top:14px"><label class="f"><span class="l">Seconds on screen</span><input type="number" id="introSecs" min="2" max="12" step="0.5"></label>
             <label class="f"><span class="l">Change takes (seconds)</span><input type="number" id="transSecs" min="0.2" max="2.5" step="0.1"></label></div></div>
         </div>
@@ -257,7 +271,7 @@ details summary{cursor:pointer;font-weight:800}
   </main>
 </div>
 
-<div class="float"><span class="dirty hidden" id="dirty">unsaved changes</span><button class="primary" id="save">Save</button></div>
+<div class="float"><span class="dirty hidden" id="dirty">unsaved changes</span><button class="hidden" id="cancel" title="Throw away the changes made since the last save">Cancel changes</button><button class="primary" id="save">Save</button></div>
 
 <script>
 const $ = id => document.getElementById(id);
@@ -269,10 +283,20 @@ const THEME_GRAD = {gold:['#fff0b0','#c4861f','255,170,40'], purple:['#ecd0ff','
   rosegold:['#ffe8e0','#c9776a','255,140,120'], emerald:['#d8ffe6','#1f9d5f','60,220,140'], ice:['#f0fbff','#2f9ad8','70,185,255'], crimson:['#ffd9d0','#c1262b','255,70,60']};
 const LOOKS = [['background','Full video background','Her video fills the screen; the animation sits on top.'],
   ['cutout','Cut-out','She is cut out and stands on the animation background.'], ['stacked','Stacked','Animation above, her video below.']];
-const STYLE_NAMES = {staircase:'Staircase',karaoke:'Karaoke line',bignote:'Big note',falling:'Falling notes',pitchtrail:'Pitch trail',gauge:'Gauge',pads:'Pad grid',arcs:'Arcs'};
+const STYLE_NAMES = {ladder:'Ladder',piano:'Piano keys',ripple:'Ripple',flower:'Flower',staircase:'Staircase',karaoke:'Karaoke line',bignote:'Big note',falling:'Falling notes',pitchtrail:'Pitch trail',gauge:'Gauge',pads:'Pad grid',arcs:'Arcs'};
 const T_NAMES = {fade:'Fade',dissolve:'Dissolve',fadeblack:'Through black',fadewhite:'Flash white',zoomin:'Zoom in',circleopen:'Circle opens',circleclose:'Circle closes',radial:'Radial sweep',
   smoothup:'Smooth up',smoothleft:'Smooth left',slideup:'Slide up',slideleft:'Slide left',pixelize:'Pixelate',hblur:'Blur',squeezeh:'Squeeze',wipeleft:'Wipe left',wiperight:'Wipe right',wipeup:'Wipe up',
   coverleft:'Cover left',revealleft:'Reveal left',distance:'Distance',fadegrays:'Through grey',horzopen:'Open sideways',vertopen:'Open up/down'};
+Object.assign(T_NAMES, {wipeleft:'Wipe left',wiperight:'Wipe right',wipeup:'Wipe up',wipedown:'Wipe down',slideleft:'Slide left',slideright:'Slide right',slidedown:'Slide down',
+  circlecrop:'Circle crop',rectcrop:'Rectangle crop',distance:'Distance',smoothright:'Smooth right',smoothdown:'Smooth down',vertopen:'Open up/down',vertclose:'Close up/down',horzopen:'Open sideways',horzclose:'Close sideways',
+  diagtl:'Diagonal top-left',diagtr:'Diagonal top-right',diagbl:'Diagonal bottom-left',diagbr:'Diagonal bottom-right',hlslice:'Slices left',hrslice:'Slices right',vuslice:'Slices up',vdslice:'Slices down',
+  wipetl:'Corner wipe top-left',wipetr:'Corner wipe top-right',wipebl:'Corner wipe bottom-left',wipebr:'Corner wipe bottom-right',squeezev:'Squeeze up/down',fadefast:'Fast fade',fadeslow:'Slow fade',
+  hlwind:'Wind left',hrwind:'Wind right',vuwind:'Wind up',vdwind:'Wind down',coverleft:'Cover left',coverright:'Cover right',coverup:'Cover up',coverdown:'Cover down',
+  revealleft:'Reveal left',revealright:'Reveal right',revealup:'Reveal up',revealdown:'Reveal down'});
+const PAL_NAMES = {rainbow:'Rainbow',neon:'Neon',pastel:'Pastel',sunset:'Sunset',ocean:'Ocean',forest:'Forest',gold:'Gold',violet:'Violet',mono:'Silver'};
+const PAL_SWATCH = {rainbow:['#e8647a','#e6c24d','#6fd36f','#4dc2e6','#9a7cf2'],neon:['#ff3d7f','#ffe53d','#3dff7f','#3dd5ff','#b13dff'],pastel:['#f4b3bd','#f4e0a8','#bfe8bf','#b3e0f4','#d0c0f4'],
+  sunset:['#ff6b6b','#ffb347','#ffd166','#e056fd','#7d8bff'],ocean:['#4dd0e1','#4fc3f7','#64b5f6','#7986cb','#a5f3fc'],forest:['#a5d66b','#66bb6a','#4db6ac','#c5e1a5','#f0f4a3'],
+  gold:['#ffe29a','#ffc23d','#f5b325','#ffd27f','#fff0c4'],violet:['#d7b8ff','#b57dff','#8f8bff','#5fd6d0','#9af0e6'],mono:['#ffffff','#cfd4ff','#a9b2ff','#8b95e0','#f1f3ff']};
 const T_TOP = ['dissolve','fade','fadeblack','fadewhite','zoomin','circleopen','radial','smoothup','slideup','pixelize','hblur','squeezeh'];
 
 let O = null, files = [], cfg = {}, dirty = false, polling = null, logSeen = 0;
@@ -284,8 +308,8 @@ const api = async (path, body) => {
   const j = await r.json(); if (j.error) throw new Error(j.error); return j;
 };
 const val = (k, d) => (cfg[k] !== undefined && cfg[k] !== null) ? cfg[k] : (O.defaults[k] !== undefined ? O.defaults[k] : d);
-const mark = () => { dirty = true; $('dirty').classList.remove('hidden'); summary(); };
-const clean = () => { dirty = false; $('dirty').classList.add('hidden'); };
+const mark = () => { dirty = true; $('dirty').classList.remove('hidden'); $('cancel').classList.remove('hidden'); summary(); };
+const clean = () => { dirty = false; $('dirty').classList.add('hidden'); $('cancel').classList.add('hidden'); };
 function fillSelect(sel, items, cur, empty){
   sel.innerHTML = ''; if (empty !== undefined) sel.add(new Option(empty, ''));
   const list = items.slice(); if (cur && !list.includes(cur)) list.unshift(cur);
@@ -353,7 +377,7 @@ function exRows(ex, into){
   into.innerHTML = '';
   ex.lines.forEach(l => { const row = document.createElement('div'); row.className = 'exrow'; row.innerHTML = `<span class="nm">${l.name}</span>`;
     let grp = null; const flush = end => { if (grp) { if (end) grp.classList.add('end'); row.appendChild(grp); grp = null; } };
-    l.text.split(/\s+/).filter(Boolean).forEach(t => { if (t === '|') flush(false); else if (t === '||') flush(true); else if (t === ',') { grp = grp || Object.assign(document.createElement('div'), {className: 'grp'}); const d = document.createElement('div'); d.className = 'nt'; d.textContent = '·'; grp.appendChild(d); }
+    l.text.split(/\s+/).filter(Boolean).forEach(t => { if (t === '|') flush(false); else if (t === '||') flush(true); else if (t === '_') { grp = grp || Object.assign(document.createElement('div'), {className: 'grp'}); const d = document.createElement('div'); d.className = 'nt'; d.style.color = 'var(--mute)'; d.textContent = script === 'telugu' ? 'ఆ' : 'aa'; grp.appendChild(d); } else if (t === ',') { grp = grp || Object.assign(document.createElement('div'), {className: 'grp'}); const d = document.createElement('div'); d.className = 'nt'; d.textContent = '·'; grp.appendChild(d); }
       else { const c = noteChip(t); if (c) { grp = grp || Object.assign(document.createElement('div'), {className: 'grp'}); grp.appendChild(c); } } });
     flush(false); into.appendChild(row); });
 }
@@ -368,14 +392,14 @@ async function drawExercise(){
 async function getEx(n){ const k = ($('raga').value || '') + '|' + n; if (!exCache[k]) exCache[k] = await api('/api/exercise?n=' + n + '&raga=' + encodeURIComponent($('raga').value || '')); return exCache[k]; }
 async function fillExercises(want){ try { const r = await api('/api/exercises?raga=' + encodeURIComponent($('raga').value || '')); const cur = want || $('exercise').value; fillSelect($('exercise'), r.numbers.map(String), r.numbers.map(String).includes(String(cur)) ? String(cur) : String(r.numbers[0])); } catch (e) {} }
 function stopAnims(){ anims.forEach(a => { clearInterval(a.timer); a.obs && a.obs.disconnect(); }); anims = []; }
-async function mkPreview(box, style, speed, w){
+async function mkPreview(box, style, speed, w, palette){
   const ex = await getEx($('exercise').value || 1), npb = {1: 1, 2: 2, 3: 4}[speed] || 1, bpm = 100;
   const fr = document.createElement('iframe'); fr.src = '/render/render.html'; fr.width = 360; fr.height = 288; box.appendChild(fr);
   const k = w / 360; fr.style.transform = `scale(${k})`; box.style.height = (288 * k) + 'px';
-  const a = {fr, style, speed, visible: true}; anims.push(a);
+  const a = {fr, style, speed, visible: true}; anims.push(a); palette = palette || 'rainbow';
   fr.onload = async () => {
     const win = fr.contentWindow;
-    const c = {style, script, title: $('raga').value || 'Raga', speedTag: false, bpm, parts: [{style, speed, npb, start: 0.5, end: 1e6, knots: null}], exercise: ex,
+    const c = {style, script, title: $('raga').value || 'Raga', speedTag: false, bpm, parts: [{style, palette, speed, npb, start: 0.5, end: 1e6, knots: null}], exercise: ex,
       variants: $('showVariants').checked ? ragaVariants() : null, present: ragaPresent(), scale: 1, designH: 288};
     try { await win.initRender(c); win.renderFrame(4); } catch (e) { return; }
     const t0 = performance.now(), beat = 60 / bpm, span = 1 + Math.min(14, ex.seq.length / npb * beat);
@@ -384,12 +408,14 @@ async function mkPreview(box, style, speed, w){
   };
 }
 let refreshT = null;
+let moreAnim = false;
 function refreshAnims(){ clearTimeout(refreshT); refreshT = setTimeout(async () => { stopAnims(); $('gallery').innerHTML = ''; document.querySelectorAll('#parts .pv').forEach(b => b.innerHTML = '');
-  const sp = (parts[selPart] || parts[0] || {speed: 1}).speed;
-  for (const st of O.styles) { const tile = document.createElement('div'); tile.className = 'tile' + ((parts[selPart] || {}).style === st ? ' on' : ''); tile.innerHTML = '<div class="pv"></div><b></b>';
+  const cur = parts[selPart] || parts[0] || {speed: 1, palette: 'rainbow'}, sp = cur.speed, pal = cur.palette || 'rainbow', list = moreAnim ? O.styles : O.styles.slice(0, 8);
+  $('moreAnim').textContent = moreAnim ? 'Show fewer animations' : `Show ${O.styles.length - 8} more animations`; $('moreAnim').classList.toggle('hidden', O.styles.length <= 8);
+  for (const st of list) { const tile = document.createElement('div'); tile.className = 'tile' + (cur.style === st ? ' on' : ''); tile.innerHTML = '<div class="pv"></div><b></b>';
     tile.querySelector('b').textContent = STYLE_NAMES[st] || st; tile.onclick = () => { if (parts[selPart]) { parts[selPart].style = st; drawParts(); mark(); } };
-    $('gallery').appendChild(tile); mkPreview(tile.querySelector('.pv'), st, sp, 150); }
-  document.querySelectorAll('#parts .pv').forEach((b, i) => mkPreview(b, parts[i].style, parts[i].speed, 270)); }, 350); }
+    $('gallery').appendChild(tile); mkPreview(tile.querySelector('.pv'), st, sp, 150, pal); }
+  document.querySelectorAll('#parts .pv').forEach((b, i) => mkPreview(b, parts[i].style, parts[i].speed, 270, parts[i].palette)); }, 350); }
 
 function drawParts(){
   refreshLooks();
@@ -399,10 +425,11 @@ function drawParts(){
     row.innerHTML = `<div class="ctl">
         <label class="f"><span class="l">Speed</span><select data-k="speed"><option value="1">Speed 1 (slow)</option><option value="2">Speed 2</option><option value="3">Speed 3 (fast)</option></select></label>
         <label class="f"><span class="l">Starts about (s)</span><input type="number" step="0.5" min="0" data-k="start"></label>
-        <label class="f wide"><span class="l">Animation</span><select data-k="style">${O.styles.map(s => `<option value="${s}">${STYLE_NAMES[s] || s}</option>`).join('')}</select></label>
+        <label class="f"><span class="l">Animation</span><select data-k="style">${O.styles.map(s => `<option value="${s}">${STYLE_NAMES[s] || s}</option>`).join('')}</select></label>
+        <label class="f"><span class="l">Colours</span><select data-k="palette">${O.palettes.map(s => `<option value="${s}">${PAL_NAMES[s] || s}</option>`).join('')}</select></label>
         <div class="wide row"><button class="small" data-sel>Choose from the gallery ↓</button><button class="small" data-del>Remove</button></div></div>
       <div class="pv"></div>`;
-    row.querySelector('[data-k=speed]').value = p.speed; row.querySelector('[data-k=style]').value = p.style; row.querySelector('[data-k=start]').value = p.start;
+    row.querySelector('[data-k=speed]').value = p.speed; row.querySelector('[data-k=style]').value = p.style; row.querySelector('[data-k=palette]').value = p.palette || 'rainbow'; row.querySelector('[data-k=start]').value = p.start;
     row.querySelectorAll('[data-k]').forEach(el => el.addEventListener('input', () => {
       p[el.dataset.k] = el.dataset.k === 'start' ? parseFloat(el.value || 0) : (el.dataset.k === 'speed' ? parseInt(el.value) : el.value); mark();
       if (el.dataset.k !== 'start') { drawParts(); } }));
@@ -427,7 +454,7 @@ function drawLooks(){
 function refreshLooks(){
   clearTimeout(lookT); lookT = setTimeout(async () => { const n = ++lookNonce, p = parts[0] || {style: 'staircase', speed: 1};
     document.querySelectorAll('.look-card img').forEach(im => im.style.opacity = .4);
-    const q = new URLSearchParams({ep: $('ep').value, frac: parseInt($('animFrac').value) / 100, shift: parseInt($('bgShift').value) / 100, style: p.style, script, raga: $('raga').value, speed: p.speed});
+    const q = new URLSearchParams({ep: $('ep').value, frac: parseInt($('animFrac').value) / 100, shift: parseInt($('bgShift').value) / 100, style: p.style, script, raga: $('raga').value, speed: p.speed, palette: p.palette || 'rainbow'});
     try { const r = await api('/api/looks?' + q); if (n !== lookNonce) return;
       LOOKS.forEach(([k]) => { const im = document.querySelector(`.look-card img[data-k="${k}"]`); if (im && r[k]) { im.src = r[k]; im.style.opacity = 1; } }); }
     catch (e) { document.querySelectorAll('.look-card img').forEach(im => im.style.opacity = 1); } }, 700);
@@ -441,13 +468,29 @@ function drawLines(){
     row.querySelector('button').onclick = () => { if (lines.length > 1) { lines.splice(i, 1); drawLines(); drawPreview(); mark(); } }; box.appendChild(row); });
   $('addLine').classList.toggle('hidden', lines.length >= 4);
 }
-function drawSwatches(){
-  const box = $('swatches'); box.innerHTML = '';
-  O.themes.forEach(t => { const g = THEME_GRAD[t], el = document.createElement('div'); el.className = 'sw' + (theme === t ? ' on' : ''); el.title = t;
-    el.style.background = `linear-gradient(135deg,${g[0]},${g[1]})`; el.onclick = () => { theme = t; drawSwatches(); drawPreview(); mark(); }; box.appendChild(el); });
+function rgbOf(h, sat, l){ h = ((h % 360) + 360) % 360; sat /= 100; l /= 100; const k = n => (n + h / 30) % 12, a = sat * Math.min(l, 1 - l), f = n => Math.round(255 * (l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1))))); return [f(0), f(8), f(4)]; }
+function themeGrad(id){
+  if (THEME_GRAD[id]) return THEME_GRAD[id];
+  const m = /^hsl:\s*(-?[\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/.exec(id || ''); if (!m) return THEME_GRAD.purple;
+  const h = +m[1], sa = +m[2], l = +m[3];
+  return [`hsl(${h},${Math.max(0, sa - 25)}%,${Math.min(97, l + 32)}%)`, `hsl(${h},${sa}%,${Math.max(8, l - 10)}%)`, rgbOf(h, sa, Math.min(80, l + 6)).join(',')];
 }
+let showAllC = false;
+function drawSwatches(){
+  const box = $('swatches'); box.innerHTML = ''; const all = O.themes, firstN = 14;
+  let list = showAllC ? all : all.slice(0, firstN); if (!showAllC && !list.some(t => t.id === theme) && all.some(t => t.id === theme)) list = list.concat(all.filter(t => t.id === theme));
+  list.forEach(t => { const g = themeGrad(t.id), el = document.createElement('div'); el.className = 'sw' + (theme === t.id ? ' on' : ''); el.title = t.name;
+    el.style.background = `linear-gradient(135deg,${g[0]},${g[1]})`; el.onclick = () => { theme = t.id; setCustomFrom(theme); drawSwatches(); drawPreview(); mark(); }; box.appendChild(el); });
+  const cu = document.createElement('div'); cu.className = 'sw custom' + (!all.some(t => t.id === theme) ? ' on' : ''); cu.title = 'Your own colour';
+  cu.onclick = () => { $('customCol').open = true; useCustom(); }; box.appendChild(cu);
+  $('moreC').textContent = showAllC ? 'Show fewer colours' : `Show all ${all.length} colours`;
+}
+function setCustomFrom(id){ const m = /^hsl:\s*(-?[\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/.exec(id || ''); if (m) { $('hueRange').value = m[1]; $('satRange').value = m[2]; $('litRange').value = m[3]; } customLabels(); }
+function customLabels(){ $('hueO').textContent = $('hueRange').value + '°'; $('satO').textContent = $('satRange').value + '%'; $('litO').textContent = $('litRange').value + '%';
+  const g = themeGrad(`hsl:${$('hueRange').value},${$('satRange').value},${$('litRange').value}`); $('customSw').style.background = `linear-gradient(135deg,${g[0]},${g[1]})`; }
+function useCustom(){ theme = `hsl:${$('hueRange').value},${$('satRange').value},${$('litRange').value}`; customLabels(); drawSwatches(); drawPreview(); mark(); }
 function drawPreview(){
-  const g = THEME_GRAD[theme] || THEME_GRAD.purple, p = $('titlePrev');
+  const g = themeGrad(theme), p = $('titlePrev');
   p.style.setProperty('--tg', `linear-gradient(180deg,${g[0]},${g[1]})`); p.style.setProperty('--glow', `rgba(${g[2]},.55)`);
   p.innerHTML = ''; lines.filter(l => l.trim()).forEach(l => { const s = document.createElement('span'); s.textContent = l.toUpperCase(); p.appendChild(s); });
   $('liveTitle').textContent = lines.filter(l => l.trim()).join(' ');
@@ -460,7 +503,7 @@ function drawTrans(){
   list.forEach(n => { const c = document.createElement('div'); c.className = 'tcard' + (trans === n ? ' on' : '');
     c.innerHTML = `<video muted loop playsinline preload="none"></video><b>${T_NAMES[n] || n}</b>`; c.onclick = () => { trans = n; drawTrans(); mark(); }; box.appendChild(c);
     const v = c.querySelector('video'); const io = new IntersectionObserver(es => es.forEach(async e => { if (e.isIntersecting) { if (!v.src) { try { v.src = (await api('/api/transition?name=' + n)).url; } catch (er) { return; } } v.play().catch(() => {}); } else v.pause(); })); io.observe(c); });
-  $('moreT').textContent = showAllT ? 'Show fewer' : 'Show more';
+  $('moreT').textContent = showAllT ? 'Show fewer change-overs' : `Show all ${O.transitions.length} change-overs`;
 }
 
 function summary(){
@@ -486,7 +529,7 @@ async function load(){
   ragas = await api('/api/ragas'); fillRagas(val('raga', 'Kalyani')); drawRagaTable(); exCache = {}; await fillExercises(String(val('exercise', 1)));
   script = val('script', 'latin'); $('showVariants').checked = val('show_variants', true); drawLetters();
   parts = (cfg.parts && cfg.parts.length ? cfg.parts : [{speed: val('speed', 1), pattern_start: val('pattern_start', 0), style: val('style', 'staircase')}])
-    .map(p => ({speed: p.speed || 1, style: p.style || val('style', 'staircase'), start: p.pattern_start !== undefined ? p.pattern_start : 0, _extra: p}));
+    .map(p => ({speed: p.speed || 1, style: p.style || val('style', 'staircase'), palette: p.palette || val('palette', 'rainbow'), start: p.pattern_start !== undefined ? p.pattern_start : 0, _extra: p}));
   selPart = 0; drawParts();
   look = val('cousin_look', 'background'); drawLooks();
   $('animFrac').value = Math.round(val('animation_fraction', 0.45) * 100); $('animFrac').dispatchEvent(new Event('input'));
@@ -495,14 +538,14 @@ async function load(){
   $('followMode').value = val('follow_mode', 'auto'); $('lag').value = val('follow_lag', -0.12); $('lag').dispatchEvent(new Event('input'));
   $('introOn').checked = val('intro', true);
   const it = val('intro_title', ['Ajanta', 'Raaga Thoram']); lines = Array.isArray(it) ? it.slice() : String(it).split('\n'); drawLines();
-  theme = val('intro_theme', 'purple'); drawSwatches(); $('introSecs').value = val('intro_seconds', 5); trans = val('intro_transition', 'dissolve'); drawTrans();
+  theme = val('intro_theme', 'purple'); setCustomFrom(theme); drawSwatches(); $('introSecs').value = val('intro_seconds', 5); trans = val('intro_transition', 'dissolve'); drawTrans();
   $('transSecs').value = val('intro_transition_seconds', 0.8); $('hashtags').value = val('hashtags', '');
   $('bpm').value = val('bpm', 'auto'); $('countIn').value = val('count_in_beats', 0); $('tol').value = cfg.follow_tolerance || ''; $('title').value = cfg.title || '';
   drawPreview(); drawExercise(); clean(); summary(); showOutputs(); setupInitialLog();
 }
 function collect(){
   const cousins = [$('cousin1').value].filter(Boolean), names = $('names').value.split(',').map(s => s.trim()).filter(Boolean);
-  const ps = parts.map(p => Object.assign({}, p._extra || {}, {speed: p.speed, style: p.style, pattern_start: p.start}));
+  const ps = parts.map(p => Object.assign({}, p._extra || {}, {speed: p.speed, style: p.style, palette: p.palette || 'rainbow', pattern_start: p.start}));
   const bpmRaw = $('bpm').value.trim(), bpm = bpmRaw === '' || bpmRaw.toLowerCase() === 'auto' ? 'auto' : parseFloat(bpmRaw);
   return {master: $('master').value, cousins, cousin_names: names, exercise: parseInt($('exercise').value), raga: $('raga').value.trim(), script, show_variants: $('showVariants').checked,
     parts: ps, style: parts[0].style, speed: parts[0].speed, pattern_start: parts[0].start, cousin_look: look, animation_fraction: parseInt($('animFrac').value) / 100,
@@ -562,12 +605,16 @@ async function init(){
   $('newEp').onclick = async () => { const n = prompt('Name for the new episode (letters, numbers, - and _), for example ep04'); if (!n) return;
     try { const r = await api('/api/new', {ep: n.trim()}); $('ep').innerHTML = ''; r.episodes.forEach(e => $('ep').add(new Option(e, e))); $('ep').value = n.trim(); localStorage.setItem('rt-ep', n.trim()); await load();
       setStatus('Created. Copy the master audio and cousin video into the folder, then reload this page.', 'ok'); } catch (e) { setStatus(e.message, 'err'); } };
-  $('addPart').onclick = () => { const l = parts[parts.length - 1]; parts.push({speed: Math.min(3, (l ? l.speed : 0) + 1), style: l ? l.style : 'staircase', start: 0}); selPart = parts.length - 1; drawParts(); mark(); };
+  $('addPart').onclick = () => { const l = parts[parts.length - 1]; parts.push({speed: Math.min(3, (l ? l.speed : 0) + 1), style: l ? l.style : 'staircase', palette: l ? l.palette : 'rainbow', start: 0}); selPart = parts.length - 1; drawParts(); mark(); };
   $('addLine').onclick = () => { lines.push(''); drawLines(); mark(); };
+  ['hueRange','satRange','litRange'].forEach(id => $(id).addEventListener('input', useCustom));
+  $('moreC').onclick = () => { showAllC = !showAllC; drawSwatches(); };
+  $('moreAnim').onclick = () => { moreAnim = !moreAnim; refreshAnims(); };
   $('moreT').onclick = () => { showAllT = !showAllT; drawTrans(); };
   $('addRaga').onclick = () => { ragas['New raga'] = {notes: ['', '2', '3', '1', '', '2', '3', ''], check: 'please verify'}; drawRagaTable(); };
   $('saveRagas').onclick = async () => { try { ragas = await api('/api/ragas', collectRagas()); fillRagas(); drawRagaTable(); const s = $('ragaStatus'); s.textContent = 'Saved'; s.className = 'pill ok'; refreshAnims(); } catch (e) { $('ragaStatus').textContent = e.message; } };
   $('save').onclick = () => save().catch(e => setStatus(e.message, 'err'));
+  $('cancel').onclick = async () => { if (!dirty || confirm('Throw away the changes you made since the last save?')) { await load(); setStatus('Changes cancelled', 'ok'); } };
   $('check').onclick = () => run('check'); $('preview').onclick = () => run('preview'); $('final').onclick = () => run('final'); $('stop').onclick = () => api('/api/stop', {});
   const links = [...document.querySelectorAll('#steps a')], secs = links.map(a => document.querySelector(a.getAttribute('href')));
   addEventListener('scroll', () => { let k = 0; secs.forEach((s, i) => { if (s.getBoundingClientRect().top < innerHeight * 0.4) k = i; }); links.forEach((a, i) => a.classList.toggle('on', i === k)); }, {passive: true});
