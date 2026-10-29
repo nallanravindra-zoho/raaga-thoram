@@ -126,15 +126,33 @@ def shift_curve(x_mid, src, dst):
 
 
 def apply_shift(x, t_s, shift, f_floor=120, f_ceil=700):
-    """Re-synthesise one channel with PSOLA, moving its pitch by the shift curve (tone colour and timing stay)."""
-    snd, manip, t, f = _manip(x, f_floor, f_ceil)
+    """Re-synthesise the voice (stereo) with PSOLA, moving its pitch by the shift curve. Both channels use the SAME pulses
+    (found in the centre of the voice), so the stereo image and the left/right match stay as she recorded them."""
+    mid = x.mean(axis=1)
+    snd, manip, t, f = _manip(mid, f_floor, f_ceil)
+    pulses = call(manip, "Extract pulses")
     s = np.interp(t, t_s, shift)
     new = call("Create PitchTier", "new", snd.xmin, snd.xmax)
     for ti, fi, si in zip(t, f, s):
         call(new, "Add point", float(ti), float(fi * 2 ** (si / 12)))
-    call([new, manip], "Replace pitch tier")
-    y = np.array(call(manip, "Get resynthesis (overlap-add)").values[0], dtype=np.float64)
-    return np.pad(y, (0, max(0, len(x) - len(y))))[: len(x)]
+    chans = []
+    for c in range(x.shape[1]):
+        sc = parselmouth.Sound(x[:, c], sampling_frequency=SR)
+        mc = call(sc, "To Manipulation", 0.01, f_floor, f_ceil)
+        call([pulses, mc], "Replace pulses")
+        call([new, mc], "Replace pitch tier")
+        y = np.array(call(mc, "Get resynthesis (overlap-add)").values[0], dtype=np.float64)
+        chans.append(np.pad(y, (0, max(0, len(x) - len(y))))[: len(x)])
+    return np.stack(chans, axis=1)
+
+
+def keep_untouched(x, y, t_s, shift, thr=0.12, fade_ms=7.0):
+    """Use the re-synthesised voice only where a note really moves; everywhere else keep her original recording untouched.
+    The switch is a short smooth fade, placed where the shift is still tiny, so no seam can be heard."""
+    tt = np.arange(len(x)) / SR
+    w = (np.abs(np.interp(tt, t_s, shift, left=0.0, right=0.0)) > thr).astype(np.float64)
+    w = np.clip(gaussian_filter1d(w, fade_ms / 1000 * SR), 0, 1)
+    return x * (1 - w)[:, None] + y * w[:, None]
 
 
 def align_gain(master, voice):
@@ -170,7 +188,7 @@ def main():
     s0, s1 = (a.seconds if a.seconds else (None, None))
     x = load_audio(a.voice, s0, s1)
     sc = shift_curve(x.mean(axis=1), src, dst)
-    y = np.stack([apply_shift(x[:, c], sc["t"], sc["shift"]) for c in range(2)], axis=1)
+    y = keep_untouched(x, apply_shift(x, sc["t"], sc["shift"]), sc["t"], sc["shift"])
     peak = max(1.0, np.abs(y).max() / 0.99)
     wavfile.write(a.out, SR, (y / peak * 32767).astype(np.int16))
     moved = np.abs(sc["shift"]) > 0.5
