@@ -48,19 +48,16 @@ def scale_of(name):
     return key, out
 
 
-def load_mono(path, start=None, end=None):
+def load_audio(path, start=None, end=None):
+    """Stereo audio as a float array (samples, 2), 44.1 kHz."""
     cmd = ["ffmpeg", "-v", "error", "-y"]
     if start is not None:
         cmd += ["-ss", str(start)]
-    if end is not None and start is not None:
-        cmd += ["-t", str(end - start)]
-    cmd += ["-i", str(path), "-ac", "1", "-ar", str(SR), "-f", "wav", "-"]
+        if end is not None:
+            cmd += ["-t", str(end - start)]
+    cmd += ["-i", str(path), "-ac", "2", "-ar", str(SR), "-f", "s16le", "-"]
     raw = subprocess.run(cmd, capture_output=True).stdout
-    with tempfile.NamedTemporaryFile(suffix=".wav") as f:
-        f.write(raw)
-        f.flush()
-        sr, x = wavfile.read(f.name)
-    return x.astype(np.float64) / 32768.0
+    return np.frombuffer(raw, np.int16).reshape(-1, 2).astype(np.float64) / 32768.0
 
 
 def estimate_sa(p, t, degrees, win=12.0, hop=2.0):
@@ -106,37 +103,54 @@ def shift_table(src, dst, tol=0.45):
     return np.array(xs)[order], np.array(ys)[order]
 
 
-def edit_voice(x, src, dst, f_floor=120, f_ceil=700):
+def _manip(x, f_floor=120, f_ceil=700):
     snd = parselmouth.Sound(x, sampling_frequency=SR)
     manip = call(snd, "To Manipulation", 0.01, f_floor, f_ceil)
     tier = call(manip, "Extract pitch tier")
     n = call(tier, "Get number of points")
     t = np.array([call(tier, "Get time from index", i + 1) for i in range(n)])
     f = np.array([call(tier, "Get value at index", i + 1) for i in range(n)])
+    return snd, manip, t, f
+
+
+def shift_curve(x_mid, src, dst):
+    """Semitones to move her pitch by at each moment, worked out from the centre of the voice."""
+    snd, manip, t, f = _manip(x_mid)
     p = 69 + 12 * np.log2(f / 440.0)
     sa_t, sa_g = estimate_sa(p, t, list(src.values()))
-    rel = p - sa_t
     xs, ys = shift_table(src, dst)
-    shift = np.interp(rel, xs, ys)
+    shift = np.interp(p - sa_t, xs, ys)
     shift = median_filter(shift, size=5, mode="nearest")
     shift = gaussian_filter1d(shift, 2.0)            # about 20-40 ms: slides between notes stay smooth
+    return dict(t=t, p=p, sa=sa_t, shift=shift, sa_global=sa_g)
+
+
+def apply_shift(x, t_s, shift, f_floor=120, f_ceil=700):
+    """Re-synthesise one channel with PSOLA, moving its pitch by the shift curve (tone colour and timing stay)."""
+    snd, manip, t, f = _manip(x, f_floor, f_ceil)
+    s = np.interp(t, t_s, shift)
     new = call("Create PitchTier", "new", snd.xmin, snd.xmax)
-    for ti, fi, si in zip(t, f, shift):
+    for ti, fi, si in zip(t, f, s):
         call(new, "Add point", float(ti), float(fi * 2 ** (si / 12)))
     call([new, manip], "Replace pitch tier")
-    out = call(manip, "Get resynthesis (overlap-add)")
-    y = np.array(out.values[0], dtype=np.float64)
-    y = np.pad(y, (0, max(0, len(x) - len(y))))[: len(x)]
-    return y, dict(t=t, p=p, sa=sa_t, rel=rel, shift=shift, sa_global=sa_g)
+    y = np.array(call(manip, "Get resynthesis (overlap-add)").values[0], dtype=np.float64)
+    return np.pad(y, (0, max(0, len(x) - len(y))))[: len(x)]
 
 
 def align_gain(master, voice):
-    """Where the voice sits inside the master (sample shift) and how loud it is there."""
+    """Where the voice sits inside the master, in samples."""
     n = min(len(master), len(voice), SR * 120)
-    a, b = master[:n], voice[:n]
-    cc = correlate(a, b, mode="full", method="fft")
-    lag = int(np.argmax(np.abs(cc))) - (len(b) - 1)
-    return lag
+    cc = correlate(master[:n], voice[:n], mode="full", method="fft")
+    return int(np.argmax(np.abs(cc))) - (n - 1)
+
+
+def shifted(a, lag):
+    out = np.zeros_like(a)
+    if lag >= 0:
+        out[lag:] = a[: len(a) - lag] if lag else a
+    else:
+        out[: len(a) + lag] = a[-lag:]
+    return out
 
 
 def main():
@@ -154,22 +168,26 @@ def main():
     changes = {"SRGMPDNŚ"[i]: dst[i] - src[i] for i in src if i in dst and dst[i] != src[i]}
     print(f"{ks} -> {kd}: notes that move (semitones): {changes or 'none'}")
     s0, s1 = (a.seconds if a.seconds else (None, None))
-    x = load_mono(a.voice, s0, s1)
-    y, info = edit_voice(x, src, dst)
-    wavfile.write(a.out, SR, y.astype(np.float32))
-    moved = np.abs(info["shift"]) > 0.5
-    print(f"edited voice written: {a.out} ({len(y) / SR:.1f}s). {moved.mean() * 100:.0f}% of her pitch points were moved; "
-          f"tonic (Sa) found: {['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'][int(round(info['sa_global'])) % 12]}")
+    x = load_audio(a.voice, s0, s1)
+    sc = shift_curve(x.mean(axis=1), src, dst)
+    y = np.stack([apply_shift(x[:, c], sc["t"], sc["shift"]) for c in range(2)], axis=1)
+    peak = max(1.0, np.abs(y).max() / 0.99)
+    wavfile.write(a.out, SR, (y / peak * 32767).astype(np.int16))
+    moved = np.abs(sc["shift"]) > 0.5
+    names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+    print(f"edited voice written: {a.out} ({len(y) / SR:.1f}s). {moved.mean() * 100:.0f}% of her pitch points were moved; tonic (Sa) found: {names[int(round(sc['sa_global'])) % 12]}")
     if a.master and a.master_out:
-        m = load_mono(a.master, s0, s1)
-        lag = align_gain(m, x)
-        xa = np.roll(x, lag)[: len(m)]
-        g = float(np.dot(m[: len(xa)], xa) / max(1e-9, np.dot(xa, xa)))
-        ya = np.roll(y, lag)[: len(m)]
-        new = m[: len(ya)] + g * (ya - xa)
-        new = new / max(1.0, np.abs(new).max() / 0.98)
-        wavfile.write(a.master_out, SR, new.astype(np.float32))
-        print(f"master rebuilt: {a.master_out} (voice found {lag / SR * 1000:+.0f} ms into it, gain {g:.2f})")
+        m = load_audio(a.master, s0, s1)
+        n = min(len(m), len(x))
+        lag = align_gain(m[:n].mean(axis=1), x[:n].mean(axis=1))
+        xa, ya = shifted(x, lag)[:n], shifted(y, lag)[:n]
+        g = float(np.dot(m[:n].mean(axis=1), xa.mean(axis=1)) / max(1e-9, np.dot(xa.mean(axis=1), xa.mean(axis=1))))
+        new = m[:n] + g * (ya - xa)
+        pk = np.abs(new).max()
+        if pk > 0.99:
+            new = new / pk * 0.99
+        wavfile.write(a.master_out, SR, (new * 32767).astype(np.int16))
+        print(f"master rebuilt: {a.master_out} (voice found {lag / SR * 1000:+.0f} ms into it, gain {g:.2f}, peak {pk:.2f})")
 
 
 if __name__ == "__main__":
