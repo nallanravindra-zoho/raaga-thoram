@@ -21,22 +21,25 @@
     {
       "speed": 1,
       "pattern_start": 9,
-      "style": "staircase"
+      "style": "staircase",
+      "palette": "rainbow"
     },
     {
       "speed": 2,
       "pattern_start": 80,
-      "style": "karaoke"
+      "style": "bignote",
+      "palette": "rainbow"
     },
     {
       "speed": 3,
       "pattern_start": 103,
-      "style": "bignote"
+      "style": "bignote",
+      "palette": "rainbow"
     }
   ],
   "style": "staircase",
   "_style_options": "staircase, karaoke, bignote, falling, pitchtrail, gauge, pads, arcs",
-  "script": "latin",
+  "script": "both",
   "_script_options": "latin or telugu",
   "intro": true,
   "intro_title": [
@@ -44,18 +47,19 @@
     "Raaga Thoram"
   ],
   "_intro_title_help": "each item is one line of the opening title. Use one item for a single line",
-  "intro_theme": "purple",
+  "intro_theme": "gold",
   "_intro_theme_options": "gold, purple, silver, rosegold, emerald, ice, crimson",
   "intro_seconds": 5,
   "intro_transition": "radial",
   "cousin_look": "background",
-  "raga": "Kalyani",
-  "animation_fraction": 0.45,
+  "raga": "Mohana",
+  "animation_fraction": 0.43,
   "face_focus": 0.3,
   "count_in_beats": 0,
   "hashtags": "#carnatic #carnaticmusic #saralivarisai #learnmusic #swaram",
   "show_variants": true,
-  "bg_shift": 0.3,
+  "bg_shift": 0.33,
   "follow_mode": "auto",
-  "intro_transition_seconds": 0.8
+  "intro_transition_seconds": 0.8,
+  "intro_dust": 0.5
 }
