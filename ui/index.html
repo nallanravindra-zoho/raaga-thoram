@@ -136,9 +136,11 @@ table.rg select,table.rg input{padding:5px 6px;border-radius:8px}
 .intro-pv{margin-top:14px;display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
 .intro-pv video{height:420px;border-radius:14px;background:#000}
 details summary{cursor:pointer;font-weight:800}
+.tabs{display:flex;gap:6px;background:#0b0a12;padding:10px 20px 0;border-bottom:1px solid #2e2b42}.tabs a{font:700 19px -apple-system,"Segoe UI",sans-serif;color:#a9a4c0;text-decoration:none;padding:11px 20px;border-radius:12px 12px 0 0}.tabs a.on{background:#7c4dff;color:#fff}.tabs a:hover{color:#fff}
 </style>
 </head>
 <body>
+<nav class="tabs"><a href="/" class="on">Raaga Thoram</a><a href="/varnanaateetam">Varnanaateetam</a><a href="/title-designs">Title designs</a></nav>
 <header><div class="top">
   <div class="mark">🎼</div>
   <div><h1 id="projTitle">Raaga Thoram</h1>
@@ -223,7 +225,11 @@ details summary{cursor:pointer;font-weight:800}
       <label class="switch" style="margin-bottom:14px"><input type="checkbox" id="introOn"> Show the opening title</label>
       <div id="introBody">
         <div class="grid">
-          <div><span class="l">Title lines (each box is one line)</span><div id="lines"></div><button class="small" id="addLine">+ Add a line</button></div>
+          <div><span class="l">Title lines (each box is one line)</span><div id="lines"></div><button class="small" id="addLine">+ Add a line</button>
+            <label class="f" style="margin-top:16px"><span class="l">Design <a href="/title-designs" target="_blank" style="font-weight:600">(watch all the designs)</a></span><select id="introDesign"><option value="classic">Classic Sparkle</option><option value="royal">Royal Seal</option><option value="elegant">Elegant Focus</option><option value="calligraphy">Calligraphy</option><option value="heritage">Heritage</option><option value="telugu">Telugu</option></select></label>
+            <label class="switch" style="margin:16px 0 12px"><input type="checkbox" id="introLogo"> Show the Ajanta Arts Academy logo at the top</label>
+            <label class="f"><span class="l">Small line above the title</span><input type="text" id="introPresents" placeholder="Ajanta Arts Academy presents"></label>
+            <label class="f" style="margin-top:10px"><span class="l">Tag line under the title</span><input type="text" id="introTagline" placeholder="The VARNAM Project"></label></div>
           <div><span class="l">Colour</span><div class="swatches" id="swatches"></div>
             <button class="small morebtn" id="moreC">Show all colours</button>
             <details id="customCol" style="margin-top:10px"><summary>Make your own colour</summary>
@@ -239,6 +245,10 @@ details summary{cursor:pointer;font-weight:800}
         <div class="intro-pv"><div><button class="teal" id="playIntro">▶ Play the whole opening</button>
           <div class="hint" style="margin:8px 0 0;max-width:260px" id="introMsg">Shows the title in this colour, then the change-over into your video, with sound. Takes about 15 seconds to make.</div></div>
           <video id="introVid" controls class="hidden"></video></div>
+        <div class="intro-pv"><div><button class="teal" id="makeTitle">★ Make the title video on its own</button>
+          <label class="f" style="margin-top:10px;max-width:260px"><span class="l">Shape</span><select id="titleShape"><option value="wide">Wide (1280 x 960)</option><option value="tall">Tall, for Instagram (1080 x 1920)</option><option value="square">Square (1080 x 1080)</option></select></label>
+          <div class="hint" style="margin:8px 0 0;max-width:260px" id="titleMsg">Full size, only the title, in the lines, colour, seconds and sparkle dust chosen above. Takes about a minute.</div></div>
+          <video id="titleVid" controls class="hidden"></video></div>
         <span class="l" style="margin-top:18px">How the title changes into the video (click one)</span>
         <div class="tgrid" id="tgrid"></div>
         <button class="small" id="moreT" style="margin-top:10px">Show more</button>
@@ -540,7 +550,7 @@ async function load(){
   $('introOn').checked = val('intro', true);
   const it = val('intro_title', ['Ajanta', 'Raaga Thoram']); lines = Array.isArray(it) ? it.slice() : String(it).split('\n'); drawLines();
   theme = val('intro_theme', 'purple'); setCustomFrom(theme); drawSwatches(); $('introSecs').value = val('intro_seconds', 5); trans = val('intro_transition', 'dissolve'); drawTrans();
-  $('transSecs').value = val('intro_transition_seconds', 0.8); $('dustRange').value = Math.round(val('intro_dust', 0.5) * 100); $('dustRange').dispatchEvent(new Event('input')); $('hashtags').value = val('hashtags', '');
+  $('transSecs').value = val('intro_transition_seconds', 0.8); $('dustRange').value = Math.round(val('intro_dust', 0.5) * 100); $('introLogo').checked = !!val('intro_logo', false); $('introDesign').value = val('intro_design', 'classic'); $('introPresents').value = val('intro_presents', ''); $('introTagline').value = val('intro_tagline', ''); $('dustRange').dispatchEvent(new Event('input')); $('hashtags').value = val('hashtags', '');
   $('bpm').value = val('bpm', 'auto'); $('countIn').value = val('count_in_beats', 0); $('tol').value = cfg.follow_tolerance || ''; $('title').value = cfg.title || '';
   drawPreview(); drawExercise(); clean(); summary(); showOutputs(); setupInitialLog();
 }
@@ -552,7 +562,7 @@ function collect(){
     parts: ps, style: parts[0].style, speed: parts[0].speed, pattern_start: parts[0].start, cousin_look: look, animation_fraction: parseInt($('animFrac').value) / 100,
     bg_shift: parseInt($('bgShift').value) / 100, follow_voice: $('followVoice').checked, follow_mode: $('followMode').value, follow_lag: parseFloat($('lag').value),
     intro: $('introOn').checked, intro_title: lines.map(s => s.trim()).filter(Boolean), intro_theme: theme, intro_seconds: parseFloat($('introSecs').value),
-    intro_transition: trans, intro_transition_seconds: parseFloat($('transSecs').value), intro_dust: parseInt($('dustRange').value) / 100, hashtags: $('hashtags').value.trim(), bpm: isNaN(bpm) ? 'auto' : bpm,
+    intro_transition: trans, intro_transition_seconds: parseFloat($('transSecs').value), intro_design: $('introDesign').value, intro_logo: $('introLogo').checked, intro_presents: $('introPresents').value.trim(), intro_tagline: $('introTagline').value.trim(), intro_dust: parseInt($('dustRange').value) / 100, hashtags: $('hashtags').value.trim(), bpm: isNaN(bpm) ? 'auto' : bpm,
     count_in_beats: parseInt($('countIn').value || 0), follow_tolerance: $('tol').value ? parseFloat($('tol').value) : null, title: $('title').value.trim() || null};
 }
 async function save(){ await api('/api/save', {ep: $('ep').value, values: collect()}); clean(); setStatus('Saved', 'ok'); }
@@ -593,9 +603,14 @@ async function init(){
   $('introOn').addEventListener('input', drawPreview);
   $('playIntro').onclick = async () => { const b = $('playIntro'); b.disabled = true; $('introMsg').textContent = 'Making the preview… about 15 seconds.';
     try { const r = await api('/api/intro_preview', {ep: $('ep').value, values: {intro_title: lines.map(s => s.trim()).filter(Boolean), intro_theme: theme, intro_seconds: parseFloat($('introSecs').value),
-        intro_transition: trans, intro_transition_seconds: parseFloat($('transSecs').value), intro_dust: parseInt($('dustRange').value) / 100}});
+        intro_transition: trans, intro_transition_seconds: parseFloat($('transSecs').value), intro_design: $('introDesign').value, intro_logo: $('introLogo').checked, intro_presents: $('introPresents').value.trim(), intro_tagline: $('introTagline').value.trim(), intro_dust: parseInt($('dustRange').value) / 100}});
       const v = $('introVid'); v.src = r.url + '?t=' + Date.now(); v.classList.remove('hidden'); v.play().catch(() => {}); $('introMsg').textContent = 'Change the colour, lines or change-over and press the button again to see the new one.'; }
     catch (e) { $('introMsg').textContent = 'Could not make it: ' + e.message; } b.disabled = false; };
+  $('makeTitle').onclick = async () => { const b = $('makeTitle'); b.disabled = true; $('titleMsg').textContent = 'Making the title… about a minute.';
+    try { const r = await api('/api/make_title', {values: {intro_title: lines.map(s => s.trim()).filter(Boolean), intro_theme: theme, intro_seconds: parseFloat($('introSecs').value),
+        intro_design: $('introDesign').value, intro_logo: $('introLogo').checked, intro_presents: $('introPresents').value.trim(), intro_tagline: $('introTagline').value.trim(), intro_dust: parseInt($('dustRange').value) / 100, shape: $('titleShape').value}});
+      const v = $('titleVid'); v.src = r.url + '?t=' + Date.now(); v.classList.remove('hidden'); v.play().catch(() => {}); $('titleMsg').textContent = 'Saved as ' + r.file; }
+    catch (e) { $('titleMsg').textContent = 'Could not make it: ' + e.message; } b.disabled = false; };
   $('raga').addEventListener('input', async () => { exCache = {}; await fillExercises(); drawScale(); refreshAnims(); refreshLooks(); drawExercise(); summary(); });
   $('showVariants').addEventListener('input', () => { drawScale(); refreshAnims(); drawExercise(); });
   $('exercise').addEventListener('input', () => { exCache = {}; refreshAnims(); drawExercise(); });

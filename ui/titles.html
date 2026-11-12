@@ -1,0 +1,73 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Title designs</title>
+<style>
+:root{--bg:#0e0d16;--card:#191726;--line:#2e2b42;--ink:#f3f1fa;--mute:#a9a4c0;--accent:#c9a4ff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:19px/1.45 -apple-system,"Segoe UI",sans-serif}
+header{padding:22px 28px 6px}h1{margin:0;font-size:32px}header p{margin:6px 0 0;color:var(--mute);font-size:19px}
+.bar{position:sticky;top:0;z-index:5;background:rgba(14,13,22,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:14px 28px;display:flex;gap:22px;flex-wrap:wrap;align-items:flex-end}
+.bar label,.bar .grp{display:flex;flex-direction:column;gap:5px;font-size:16px;color:var(--mute);font-weight:600}
+input[type=text],select{font:inherit;font-size:19px;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:#12111c;color:var(--ink);min-width:200px}
+.chips{display:flex;gap:10px;flex-wrap:wrap}
+.chip{font:inherit;font-size:18px;font-weight:600;padding:9px 16px 9px 12px;border-radius:999px;border:2px solid var(--line);background:#12111c;color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:9px}
+.chip i{width:20px;height:20px;border-radius:50%;display:inline-block}.chip.on{border-color:#fff;background:#262338}
+main{padding:22px 28px 60px;display:grid;grid-template-columns:repeat(auto-fill,minmax(520px,1fr));gap:22px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.card.picked{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.stage{background:#000;display:flex;justify-content:center}.stage iframe{border:0;width:100%;aspect-ratio:4/3;display:block}
+.stage.tall iframe{width:auto;height:560px;aspect-ratio:9/16}.stage.square iframe{width:auto;height:520px;aspect-ratio:1}
+.meta{padding:14px 18px 18px}.meta h2{margin:0;font-size:25px;display:flex;align-items:center;gap:10px}
+.info{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--mute);background:none;color:var(--mute);font:italic 700 17px Georgia,serif;cursor:pointer}
+.desc{color:var(--mute);margin:10px 0 0;font-size:18px}.hidden{display:none!important}
+.btns{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+button.act{font:inherit;font-size:19px;font-weight:700;padding:11px 18px;border-radius:12px;border:1px solid var(--line);background:#262338;color:var(--ink);cursor:pointer}
+button.act.go{background:linear-gradient(120deg,#8a5cf0,#5b3bc4);border-color:transparent}button.act:disabled{opacity:.5;cursor:wait}
+.msg{margin-top:12px;font-size:18px;color:var(--mute);word-break:break-all}.card video{width:100%;display:block;margin-top:12px;border-radius:12px;background:#000}
+.tabs{display:flex;gap:6px;background:#0b0a12;padding:10px 20px 0;border-bottom:1px solid #2e2b42}.tabs a{font:700 19px -apple-system,"Segoe UI",sans-serif;color:#a9a4c0;text-decoration:none;padding:11px 20px;border-radius:12px 12px 0 0}.tabs a.on{background:#7c4dff;color:#fff}.tabs a:hover{color:#fff}
+</style></head><body>
+<nav class="tabs"><a href="/">Raaga Thoram</a><a href="/varnanaateetam">Varnanaateetam</a><a href="/title-designs" class="on">Title designs</a></nav>
+<header><h1>Title designs</h1><p>Pick a colour, watch each design, then press “This is my pick” on the one you like. Your pick becomes the Varnanaateetam design.</p></header>
+<div class="bar">
+  <div class="grp"><span>Colour</span><div class="chips" id="chips"></div></div>
+  <label>Title<input type="text" id="title" value="Varnanaateetam"></label>
+  <label>Line above<input type="text" id="presents" value="Ajanta Arts Academy presents"></label>
+  <label>Tag line<input type="text" id="tagline" value="The VARNAM Project"></label>
+  <label>Shape<select id="shape"><option value="wide">Wide (YouTube)</option><option value="tall">Tall (Instagram, reels)</option><option value="square">Square</option></select></label>
+  <label>Logo<select id="logo"><option value="1">Show</option><option value="0">Hide</option></select></label>
+</div>
+<main id="grid"></main>
+<script>
+const COLOURS = [['Mohana','hsl:330,78,66','#f06bb0'],['Kalyani','gold','#f2c350'],['Naatakuranji','hsl:258,75,68','#9d7df0'],['Sankarabharanam','hsl:222,85,64','#5a86f2'],['Hamsadhvani','silver','#dfe5ee'],['Vasanta','hsl:100,65,55','#7fd64a'],
+  ['Purple','purple','#ab6cf0'],['Rose gold','rosegold','#f7b9a6'],['Emerald','emerald','#52cf88'],['Ice','ice','#6fc4f2'],['Crimson','crimson','#e55a4a']];
+const DESIGNS = [
+  ['classic','1 · Classic Sparkle','Ornate capital letters that rise one by one in a shower of sparkle. Logo in its own red. Tag line in spaced capitals.'],
+  ['royal','2 · Royal Seal','Clean Roman capitals written on by a moving light. Logo inside a ring that draws itself, like a seal. Tag line in italics between two fine lines.'],
+  ['elegant','3 · Elegant Focus','Bold book lettering that comes slowly into focus from a soft blur. Logo in the same colour as the title. Tag line inside a thin outlined plate.'],
+  ['calligraphy','4 · Calligraphy','Flowing handwritten lettering, written on by a moving light. Logo in its own red. Tag line in spaced capitals.'],
+  ['heritage','5 · Heritage','Lettering with an Indian flavour, rising with sparkle. Logo in the title colour inside a ring. Tag line inside a thin outlined plate.'],
+  ['telugu','6 · Telugu','The title in Telugu letters, coming into focus. Type the title in English above for the others; this one always shows the Telugu word below unless you type Telugu yourself.'],
+  ['royal_classic','7 · Royal Seal with Classic lettering','Everything from Royal Seal (logo inside a ring, moving light, tag line between two fine lines) with the ornate capital letters of Classic Sparkle.']];
+const TELUGU = 'వర్ణనాతీతం', SIZES = {wide:[640,480], tall:[405,720], square:[520,520]};
+const $ = id => document.getElementById(id); let colour = COLOURS[1][1], picked = '';
+const textFor = d => (d === 'telugu' && !/[ఀ-౿]/.test($('title').value)) ? TELUGU : $('title').value.trim() || 'Varnanaateetam';
+function cfg(d){ const [w,h] = SIZES[$('shape').value]; return {text: textFor(d), seconds: 7, dust: 0.5, theme: colour, w, h, design: d,
+  logo: $('logo').value === '1' ? '/brand/aaa_logo.png' : null, presents: $('presents').value.trim(), tagline: $('tagline').value.trim()}; }
+function draw(){
+  $('chips').innerHTML = ''; COLOURS.forEach(([n,t,c]) => { const b = document.createElement('button'); b.className = 'chip' + (t === colour ? ' on' : ''); b.innerHTML = '<i style="background:' + c + '"></i>' + n; b.onclick = () => { colour = t; draw(); }; $('chips').append(b); });
+  const g = $('grid'); g.innerHTML = '';
+  DESIGNS.forEach(([d,name,desc]) => { const c = document.createElement('div'); c.className = 'card' + (d === picked ? ' picked' : '');
+    c.innerHTML = '<div class="stage ' + $('shape').value + '"><iframe loading="lazy"></iframe></div><div class="meta"><h2>' + name + ' <button class="info" title="What is in this design">i</button></h2><p class="desc hidden">' + desc + '</p>' +
+      '<div class="btns"><button class="act replay">↻ Play again</button><button class="act pick">' + (d === picked ? '✓ My pick for Varnanaateetam' : 'This is my pick') + '</button><button class="act go">★ Make this video</button></div><div class="msg hidden"></div><video controls class="hidden"></video></div>';
+    const f = c.querySelector('iframe'); f.src = '/title/render.html?play=' + encodeURIComponent(JSON.stringify(cfg(d)));
+    c.querySelector('.info').onclick = () => c.querySelector('.desc').classList.toggle('hidden');
+    c.querySelector('.replay').onclick = () => f.contentWindow.postMessage('replay', '*');
+    c.querySelector('.pick').onclick = async () => { picked = d; draw(); await fetch('/api/varnam', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id: 'defaults', values: {intro_design: d}})}); };
+    c.querySelector('.go').onclick = async e => { const b = e.target, m = c.querySelector('.msg'), k = cfg(d); b.disabled = true; m.classList.remove('hidden'); m.textContent = 'Making the video… about a minute.';
+      try { const r = await (await fetch('/api/make_title', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({values: {intro_title: k.text.split('\n'), intro_theme: colour, intro_seconds: 7, intro_dust: 0.5,
+          intro_design: d, intro_logo: !!k.logo, intro_presents: k.presents, intro_tagline: k.tagline, shape: $('shape').value}})})).json();
+        if (r.error) throw new Error(r.error); const v = c.querySelector('video'); v.src = r.url + '?t=' + Date.now(); v.classList.remove('hidden'); v.play().catch(() => {}); m.textContent = 'Saved as ' + r.file; }
+      catch (err) { m.textContent = 'Could not make it: ' + err.message; } b.disabled = false; };
+    g.append(c); });
+}
+let tm; ['title','presents','tagline'].forEach(i => $(i).addEventListener('input', () => { clearTimeout(tm); tm = setTimeout(draw, 600); })); ['shape','logo'].forEach(i => $(i).addEventListener('input', draw));
+fetch('/api/varnam').then(r => r.json()).then(s => { picked = s.defaults.intro_design || ''; draw(); }).catch(draw);
+</script></body></html>

@@ -265,7 +265,7 @@ def intro_preview(ep, vals):
     import hashlib
     import tempfile
     PREVIEWS.mkdir(exist_ok=True)
-    keys = ("intro_title", "intro_theme", "intro_seconds", "intro_transition", "intro_transition_seconds", "intro_dust")
+    keys = ("intro_title", "intro_theme", "intro_seconds", "intro_transition", "intro_transition_seconds", "intro_dust", "intro_logo", "intro_presents", "intro_tagline", "intro_design")
     S2 = dict(rt.DEFAULTS)
     S2.update({k: vals[k] for k in keys if k in vals})
     S2["intro"] = True
@@ -287,6 +287,120 @@ def intro_preview(ep, vals):
     rt.add_intro(S2, clip, out, 360 / 1080, rep)
     shutil.rmtree(tmp, ignore_errors=True)
     return f"/previews/{out.name}"
+
+
+TITLES = HERE / "content" / "titles"
+TITLE_SIZES = {"wide": (1280, 960), "tall": (1080, 1920), "square": (1080, 1080)}
+
+
+def make_title(vals):
+    """The title on its own at full size (no change-over, no episode), saved in content/titles."""
+    title = vals.get("intro_title") or ["Varnanaateetam"]
+    title = "\n".join(title) if isinstance(title, list) else str(title)
+    theme = str(vals.get("intro_theme", "gold"))
+    dust = float(vals.get("intro_dust", 0.5))
+    secs = float(vals.get("intro_seconds", 5))
+    shape = vals.get("shape", "wide") if vals.get("shape") in TITLE_SIZES else "wide"
+    w, h = TITLE_SIZES[shape]
+    tag = lambda s: re.sub(r"[^a-z0-9]+", "_", str(s).lower()).strip("_")
+    TITLES.mkdir(parents=True, exist_ok=True)
+    extras = rt.title_extras(vals)
+    import hashlib
+    xtag = ("_full_" + hashlib.md5(json.dumps(extras).encode()).hexdigest()[:5]) if extras else ""      # with logo / line above / tag line
+    snd = vm.title_audio(vals.get("title_music", "sparkle"), vals.get("raga") or "Mohana", secs) if vals.get("sound", True) else None
+    if vals.get("title_music", "sparkle") != "sparkle":
+        xtag += "_" + tag(snd.stem if snd else "silent")
+    out = TITLES / f"{tag(title)}_{tag(theme)}_{shape}_{secs:g}s_d{dust:g}{xtag}{'_v3' if secs > 5 else ''}.mp4"
+    if not out.exists():
+        cmd = [sys.executable, str(HERE / "tools" / "title_reveal" / "make_title.py"), title, str(out), "--theme", theme, "--dust", str(dust),
+               "--w", str(w), "--h", str(h), "--seconds", str(secs)] + extras
+        if snd:
+            cmd += ["--audio", str(snd)]
+        r = subprocess.run(cmd, capture_output=True, text=True)
+        if r.returncode != 0:
+            out.unlink(missing_ok=True)
+            raise RuntimeError((r.stderr or r.stdout)[-600:])
+    return {"url": f"/titles/{out.name}", "file": str(out.relative_to(HERE))}
+
+
+# ---------- Varnanaateetam (the varnam videos): its own preferences, and one settings file per video ----------
+VARNAM = HERE / "varnanaateetam"
+import varnam as vm  # noqa: E402
+
+VARNAM_DEFAULTS, VARNAM_VIDEOS = vm.DEFAULTS, vm.VIDEOS
+
+
+def _read_json(p):
+    try:
+        return json.loads(p.read_text())
+    except Exception:
+        return {}
+
+
+def varnam_state():
+    videos = []
+    for vid, name, colour in VARNAM_VIDEOS:
+        d = VARNAM / "videos" / vid
+        d.mkdir(parents=True, exist_ok=True)
+        s = {"raga": name, "colour": colour, "design": "", "varnam": "", "composer": "", **_read_json(d / "video.json")}
+        files = sorted(f.name for f in d.iterdir() if f.is_file() and f.suffix != ".json" and not f.name.startswith("."))
+        low = [f.lower() for f in files]
+        have = {"notation": "notation.txt" in low, "audio": any(Path(f).suffix in vm.AUDIO_EXT and not f.startswith("voice") for f in low),
+                "photos": sum(Path(f).suffix in vm.IMAGE_EXT for f in low)}
+        outs = sorted((f.name for f in (d / "out").glob("*.mp4") if not f.name.startswith("_")), key=lambda n: -(d / "out" / n).stat().st_mtime) if (d / "out").is_dir() else []
+        videos.append({"id": vid, "settings": s, "files": files, "folder": str(d.relative_to(HERE)), "have": have, "outputs": outs})
+    music = sorted(f.name for f in vm.MUSIC.glob("*") if f.suffix.lower() in vm.AUDIO_EXT and not f.name.startswith("piano_")) if vm.MUSIC.is_dir() else []
+    return {"defaults": {**VARNAM_DEFAULTS, **_read_json(VARNAM / "defaults.json")}, "videos": videos, "music": music}
+
+
+def add_title_music(name, data):
+    """Keep an audio file the user picked, so it can be chosen as the title sound."""
+    name = re.sub(r"[^A-Za-z0-9 ._-]", "_", Path(name).name).strip() or "music.m4a"
+    if Path(name).suffix.lower() not in vm.AUDIO_EXT or name.startswith("piano_"):
+        raise ValueError("That is not an audio file this page can use (mp3, m4a, wav, aac, flac).")
+    if not data or len(data) > 40_000_000:
+        raise ValueError("The file is empty or larger than 40 MB.")
+    vm.MUSIC.mkdir(parents=True, exist_ok=True)
+    (vm.MUSIC / name).write_bytes(data)
+    return {"name": name, **varnam_state()}
+
+
+def varnam_save(vid, values):
+    if vid == "defaults":
+        p = VARNAM / "defaults.json"
+    elif vid in [v[0] for v in VARNAM_VIDEOS]:
+        p = VARNAM / "videos" / vid / "video.json"
+    else:
+        raise ValueError("no such video: " + str(vid))
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps({**_read_json(p), **values}, indent=2, ensure_ascii=False) + "\n")
+    return varnam_state()
+
+
+def varnam_lines(v):
+    out = []
+    for l in v["lines"]:
+        words = " ".join(x[1] for x in (l["en"] or l["te"])) or " ".join(vm.SW[u[0]] if isinstance(u, list) else ("," if u == 0 else "-") for u in l["u"])
+        out.append({"t": l["t"], "d": l["d"], "tapped": l["tapped"], "part": v["nt"]["sections"][l["sec"]]["name"] + (" · second speed" if l["speed"] > 1 else ""), "words": words})
+    return out
+
+
+def varnam_cfg(vid, shape, example):
+    """Everything the Preview and sync page needs: the screen settings, the audio to play and the line times."""
+    v = vm.load(vid, example)
+    cfg, notes = vm.build_cfg(v, shape if shape in vm.SIZES else "wide", 0.5, urls=True)
+    return {"cfg": cfg, "notes": notes, "audio": f"/varnam-file/{vid}/{v['audio'].relative_to(v['dir'])}", "bpm": v["bpm"], "bpm_guess": v["bpm_guess"],
+            "start": float(v["sync"].get("start", 2.0)), "lines": varnam_lines(v), "sample_notes": v["sample_notes"], "sample_sound": v["sample_sound"], "raga": v["s"]["raga"]}
+
+
+def varnam_sync(vid, values):
+    """Save the tempo, the start time and the tapped line times, and give back the new time of every line."""
+    if vid not in [x[0] for x in VARNAM_VIDEOS]:
+        raise ValueError("no such video: " + str(vid))
+    p = VARNAM / "videos" / vid / "sync.json"
+    cur = {**_read_json(p), **{k: values[k] for k in ("bpm", "start", "lines") if k in values}}
+    p.write_text(json.dumps(cur, indent=1) + "\n")
+    return {"lines": varnam_lines(vm.load(vid, True))}
 
 
 def xfade_names():
@@ -353,11 +467,23 @@ def start_run(name, mode):
     args = {"check": ["--check"], "playback": ["--playback"], "preview": ["--preview"], "final": []}.get(mode)
     if args is None:
         raise ValueError("unknown mode")
+    start_proc([str(HERE / "raaga_thoram.py"), f"episodes/{name}", *args], mode, name)
+
+
+def start_varnam(data):
+    vid, mode = str(data["id"]), data.get("mode", "full")
+    if vid not in [x[0] for x in VARNAM_VIDEOS] or mode not in ("full", "preview", "reel"):
+        raise ValueError("unknown video or mode")
+    args = [vid, "--shape", data.get("shape") if data.get("shape") in vm.SIZES else "wide"]
+    args += {"preview": ["--preview"], "reel": ["--reel", str(float(data.get("start") or 0))], "full": []}[mode]
+    start_proc([str(HERE / "varnam.py"), *args, *(["--example"] if data.get("example") else [])], mode, "varnam:" + vid)
+
+
+def start_proc(cmd, mode, name):
     with LOCK:
         if RUN["proc"] and RUN["proc"].poll() is None:
             raise RuntimeError("something is already running")
-        proc = subprocess.Popen([sys.executable, "-u", str(HERE / "raaga_thoram.py"), f"episodes/{name}", *args], cwd=HERE,
-                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        proc = subprocess.Popen([sys.executable, "-u", *cmd], cwd=HERE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
         RUN.update(proc=proc, lines=[], mode=mode, ep=name, code=None)
 
     def pump():
@@ -434,6 +560,39 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_file(HERE / "render" / "render.html", "text/html; charset=utf-8")
             elif u.path.startswith("/previews/"):
                 self.send_file(PREVIEWS / Path(u.path).name, "video/mp4" if u.path.endswith(".mp4") else "image/png")
+            elif u.path == "/varnanaateetam":
+                self.send((HERE / "ui" / "varnam.html").read_bytes(), ctype="text/html")
+            elif u.path == "/api/varnam":
+                self.send(varnam_state())
+            elif u.path == "/title-music":
+                import mimetypes
+                f = vm.title_audio(q.get("choice"), q.get("raga", "Mohana"), float(q.get("seconds", 7)))
+                if not f:
+                    return self.send({"error": "no sound"}, 404)
+                self.send_file(f, "audio/mp4" if f.suffix.lower() == ".m4a" else (mimetypes.guess_type(f.name)[0] or "audio/mpeg"))
+            elif u.path == "/varnanaateetam/sync":
+                self.send((HERE / "ui" / "varnam_sync.html").read_bytes(), ctype="text/html")
+            elif u.path == "/render/varnam.html":
+                self.send_file(HERE / "render" / "varnam.html", "text/html; charset=utf-8")
+            elif u.path == "/api/varnam_cfg":
+                self.send(varnam_cfg(q["id"], q.get("shape", "wide"), q.get("example") == "1"))
+            elif u.path.startswith("/varnam-file/"):
+                import mimetypes
+                from urllib.parse import unquote
+                _, _, vid, rest = unquote(u.path).split("/", 3)
+                base = (VARNAM / "videos" / vid).resolve()
+                f = (base / rest).resolve()
+                if vid not in [x[0] for x in VARNAM_VIDEOS] or base not in f.parents:
+                    return self.send({"error": "not found"}, 404)
+                self.send_file(f, mimetypes.guess_type(f.name)[0] or "application/octet-stream")
+            elif u.path == "/title-designs":
+                self.send((HERE / "ui" / "titles.html").read_bytes(), ctype="text/html")
+            elif u.path == "/title/render.html":
+                self.send_file(HERE / "tools" / "title_reveal" / "render.html", "text/html; charset=utf-8")
+            elif u.path.startswith("/brand/"):
+                self.send_file(HERE / "content" / "brand" / Path(u.path).name, "image/png")
+            elif u.path.startswith("/titles/"):
+                self.send_file(TITLES / Path(u.path).name, "video/mp4")
             elif u.path.startswith("/media/"):
                 _, _, name, rest = u.path.split("/", 3)
                 p = (ep_dir(name) / "out" / Path(rest).name)
@@ -472,6 +631,9 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         u = urlparse(self.path)
         try:
+            if u.path == "/api/title_audio":          # the file itself is the body
+                q = {k: v[0] for k, v in parse_qs(u.query).items()}
+                return self.send(add_title_music(q.get("name", ""), self.rfile.read(int(self.headers.get("Content-Length") or 0))))
             data = self.body()
             if u.path == "/api/save":
                 self.send({"config": save_config(data["ep"], data["values"])})
@@ -480,6 +642,16 @@ class Handler(BaseHTTPRequestHandler):
             elif u.path == "/api/intro_preview":
                 with INTRO_LOCK:
                     self.send({"url": intro_preview(data["ep"], data["values"])})
+            elif u.path == "/api/varnam":
+                self.send(varnam_save(data["id"], data["values"]))
+            elif u.path == "/api/varnam_sync":
+                self.send(varnam_sync(data["id"], data["values"]))
+            elif u.path == "/api/varnam_run":
+                start_varnam(data)
+                self.send({"ok": True})
+            elif u.path == "/api/make_title":
+                with INTRO_LOCK:
+                    self.send(make_title(data["values"]))
             elif u.path == "/api/new":
                 new_episode(data["ep"])
                 self.send({"episodes": list_episodes()})

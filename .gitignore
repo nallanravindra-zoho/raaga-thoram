@@ -21,3 +21,15 @@ content/tabla_loop/samples/*
 tools/bin/
 content/reference/
 ui/previews/
+# varnam audio and photos stay on this machine; the small settings files are kept
+varnanaateetam/videos/*/*
+!varnanaateetam/videos/*/video.json
+!varnanaateetam/videos/*/notation.txt
+!varnanaateetam/videos/*/sync.json
+
+content/titles/for_soujanya/
+content/titles/*.zip
+content/titles/music/
+content/titles/*/
+content/brand/varnam_colour_ideas.png
+content/brand/title_design_options.png

@@ -49,6 +49,10 @@ DEFAULTS = {
     "intro_theme": "purple",
     "intro_seconds": 5.0,
     "intro_dust": 0.5,
+    "intro_design": "classic",      # title design: classic, royal, elegant, calligraphy, heritage, telugu
+    "intro_logo": False,            # show the Ajanta Arts Academy logo at the top of the title
+    "intro_presents": "",           # small line above the title, e.g. "Ajanta Arts Academy presents"
+    "intro_tagline": "",            # tag line under the title, e.g. "The VARNAM Project"
     "intro_transition": "dissolve",
     "intro_transition_seconds": 0.8,
     "intro_audio": str(HERE / "content" / "titles" / "intro_audio.m4a"),
@@ -411,6 +415,23 @@ def clear_rotation_flag(path):
     tmp.replace(path)
 
 
+LOGO = HERE / "content" / "brand" / "aaa_logo.png"
+
+
+def title_extras(settings):
+    """Extra arguments for the title maker: the academy logo, the line above the title and the tag line under it."""
+    x = []
+    if str(settings.get("intro_design") or "classic") != "classic":
+        x += ["--design", str(settings["intro_design"])]
+    if settings.get("intro_logo") and LOGO.exists():
+        x += ["--logo", str(LOGO)]
+    if str(settings.get("intro_presents") or "").strip():
+        x += ["--presents", str(settings["intro_presents"]).strip()]
+    if str(settings.get("intro_tagline") or "").strip():
+        x += ["--tagline", str(settings["intro_tagline"]).strip()]
+    return x
+
+
 def add_intro(settings, main_path, out_path, s, report):
     """Put the RAAGA THORAM title (rendered in the episode's size) in front, with a short cross-fade."""
     if not settings["intro"]:
@@ -424,10 +445,13 @@ def add_intro(settings, main_path, out_path, s, report):
     title = "\n".join(title) if isinstance(title, list) else str(title)
     tag = re.sub(r"[^a-z0-9]+", "_", title.lower()).strip("_")
     theme_tag = re.sub(r"[^a-z0-9]+", "_", str(settings["intro_theme"]).lower()).strip("_")
-    intro = tdir / f"{tag}_{theme_tag}_{Wd}x{Hd}_{secs:g}s_d{float(settings['intro_dust']):g}.mp4"
+    extras = title_extras(settings)
+    xtag = ("_x" + re.sub(r"[^a-z0-9]+", "", "".join(extras).lower())[:40]) if extras else ""
+    intro = tdir / f"{tag}_{theme_tag}_{Wd}x{Hd}_{secs:g}s_d{float(settings['intro_dust']):g}{xtag}.mp4"
     if not intro.exists():
         cmd = [sys.executable, str(HERE / "tools" / "title_reveal" / "make_title.py"), title, str(intro),
                "--theme", settings["intro_theme"], "--dust", str(settings["intro_dust"]), "--w", str(Wd), "--h", str(Hd), "--seconds", str(secs), "--fps", str(settings["fps"])]
+        cmd += extras
         if Path(settings["intro_audio"]).exists():
             cmd += ["--audio", settings["intro_audio"]]
         r = subprocess.run(cmd, capture_output=True, text=True)

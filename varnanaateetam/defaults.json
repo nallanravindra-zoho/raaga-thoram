@@ -1,0 +1,12 @@
+{
+  "intro_title": [
+    "Varnanaateetam"
+  ],
+  "intro_presents": "Ajanta Arts Academy presents",
+  "intro_tagline": "The VARNAM Project",
+  "intro_logo": true,
+  "intro_design": "classic",
+  "intro_seconds": 5,
+  "intro_dust": 0.4,
+  "script": "both"
+}

@@ -1,0 +1,100 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Varnanaateetam · preview and sync</title>
+<style>
+:root{--bg:#0e0d16;--card:#191726;--line:#2e2b42;--ink:#f3f1fa;--mute:#a9a4c0;--accent:#c9a4ff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:19px/1.45 -apple-system,"Segoe UI",sans-serif}
+.tabs{display:flex;gap:6px;background:#0b0a12;padding:10px 20px 0;border-bottom:1px solid #2e2b42}.tabs a{font:700 19px -apple-system,"Segoe UI",sans-serif;color:#a9a4c0;text-decoration:none;padding:11px 20px;border-radius:12px 12px 0 0}.tabs a.on{background:#7c4dff;color:#fff}.tabs a:hover{color:#fff}
+header{padding:20px 28px 0;display:flex;align-items:center;gap:16px;flex-wrap:wrap}h1{margin:0;font-size:32px}
+.info{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--mute);background:none;color:var(--mute);font:italic 700 18px Georgia,serif;cursor:pointer;flex:none}
+.help{color:var(--mute);font-size:18px;margin:10px 28px 0;max-width:1000px}.hidden{display:none!important}
+.warn{margin:14px 28px 0;background:#3a2c12;border:1px solid #7a5a1c;color:#ffdf9c;border-radius:12px;padding:12px 16px;font-size:19px}
+main{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(380px,1fr);gap:22px;padding:20px 28px 60px;align-items:start}
+@media(max-width:1100px){main{grid-template-columns:1fr}}
+.stage{background:#000;border-radius:16px;overflow:hidden;display:flex;justify-content:center}
+.stage iframe{border:0;display:block;width:100%}
+audio{width:100%;margin-top:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px 20px;margin-bottom:18px}
+h2{margin:0 0 12px;font-size:24px}
+.row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}
+.f{display:flex;flex-direction:column;gap:5px;font-size:16px;color:var(--mute);font-weight:600}
+input[type=number],select{font:inherit;font-size:20px;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:#12111c;color:var(--ink);width:150px}
+button.act{font:inherit;font-size:19px;font-weight:700;padding:11px 16px;border-radius:12px;border:1px solid var(--line);background:#262338;color:var(--ink);cursor:pointer}
+button.act:disabled{opacity:.45;cursor:not-allowed}
+#tap{width:100%;font-size:28px;padding:26px 10px;background:linear-gradient(120deg,#8a5cf0,#5b3bc4);border-color:transparent;margin:6px 0 12px}
+#tap:active{filter:brightness(1.4)}
+.small{font-size:17px;color:var(--mute);margin:8px 0 0}
+#lines{max-height:52vh;overflow:auto;border:1px solid var(--line);border-radius:12px}
+.ln{display:grid;grid-template-columns:44px 86px 1fr;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);cursor:pointer;font-size:18px;align-items:baseline}
+.ln:last-child{border-bottom:0}.ln .n{color:var(--mute)}.ln .t{font-variant-numeric:tabular-nums}.ln .t.tapped{color:#7fe0a8;font-weight:700}
+.ln .p{color:var(--accent);font-size:15px;font-weight:700;display:block}.ln.now{background:#2a2540}.ln.next{outline:2px solid #8a5cf0;outline-offset:-2px}
+.saved{color:#7fe0a8;font-size:17px;font-weight:600;opacity:0;transition:opacity .3s}.saved.show{opacity:1}
+</style></head><body>
+<nav class="tabs"><a href="/">Raaga Thoram</a><a href="/varnanaateetam" class="on">Varnanaateetam</a><a href="/title-designs">Title designs</a></nav>
+<header><h1 id="h1">Preview and sync</h1><button class="info" id="infoBtn">i</button>
+  <label class="f" style="flex-direction:row;align-items:center;gap:10px">Shape<select id="shape"><option value="wide">Wide (YouTube)</option><option value="tall">Tall (Instagram)</option><option value="square">Square</option></select></label>
+  <span class="saved" id="saved">✓ Saved</span></header>
+<p class="help hidden" id="help">This plays the audio with the screen drawn live, so you can see whether each line lights up when it is sung. There are two ways to line them up.
+  <b>Steady tempo:</b> type the beats a minute and the second the first line starts; every line is then placed by counting beats.
+  <b>Tapping:</b> play the audio and press the big button (or the space bar) at the moment each line starts. Tapped lines show a green time, and lines you did not tap are spaced between the tapped ones.
+  Click any line to jump there and tap again from that line. Nothing here changes the audio.</p>
+<div class="warn hidden" id="warn"></div>
+<main>
+  <div><div class="stage"><iframe id="fr"></iframe></div><audio id="au" controls preload="auto"></audio><p class="small" id="notes"></p></div>
+  <div>
+    <div class="card"><h2>Steady tempo</h2>
+      <div class="row"><label class="f">Beats a minute<input type="number" id="bpm" min="20" max="300" step="0.1"></label>
+        <label class="f">First line starts at (seconds)<input type="number" id="start" min="0" step="0.05"></label></div>
+      <p class="small" id="guess"></p></div>
+    <div class="card"><h2>Tap each line</h2>
+      <button class="act" id="tap">TAP when the outlined line starts<br><span style="font-size:17px;font-weight:600">or press the space bar</span></button>
+      <div class="row"><button class="act" id="undo">Undo last tap</button><button class="act" id="clear">Clear all taps</button>
+        <button class="act" id="earlier">All 0.05 s earlier</button><button class="act" id="later">All 0.05 s later</button></div></div>
+    <div class="card"><h2>Lines in the order sung</h2><div id="lines"></div></div>
+  </div>
+</main>
+<script>
+const $ = i => document.getElementById(i), q = new URLSearchParams(location.search), id = q.get('id') || 'mohana';
+let shape = q.get('shape') || 'wide', D = null, F = null, ready = false, taps = [], ptr = 0, hist = [], cur = -1, saveTimer = null;
+const fmt = t => { const m = Math.floor(t / 60), s = t - m * 60; return m + ':' + (s < 10 ? '0' : '') + s.toFixed(2); };
+async function load(){
+  ready = false; let r = await (await fetch('/api/varnam_cfg?id=' + id + '&shape=' + shape)).json(), msg = '';
+  if (r.error) { msg = r.error; r = await (await fetch('/api/varnam_cfg?id=' + id + '&shape=' + shape + '&example=1')).json(); if (r.error) { $('warn').textContent = r.error; $('warn').classList.remove('hidden'); return; } }
+  D = r; $('h1').textContent = r.raga + ' · preview and sync'; $('shape').value = shape;
+  const w = []; if (msg) w.push(msg); if (r.sample_notes) w.push('Showing the SAMPLE notation. Taps are not kept until the real notation is in the folder.'); if (r.sample_sound) w.push('Playing test tones, because there is no recording yet.');
+  $('warn').textContent = w.join(' '); $('warn').classList.toggle('hidden', !w.length);
+  $('notes').textContent = r.notes.join(' '); $('bpm').value = r.bpm; $('start').value = r.start;
+  $('guess').textContent = r.bpm_guess ? 'Measured pulse in the audio: about ' + r.bpm_guess + ' a minute. The beat may be this, half of it or double it.' : '';
+  taps = r.lines.map(l => l.tapped ? l.t : null); ptr = Math.max(0, taps.findIndex(t => t == null)); hist = [];
+  ['tap','undo','clear'].forEach(b => $(b).disabled = r.sample_notes);
+  if ($('au').dataset.src !== r.audio) { $('au').src = r.audio + '?t=' + Date.now(); $('au').dataset.src = r.audio; }
+  const fr = $('fr'); fr.style.aspectRatio = r.cfg.w + ' / ' + r.cfg.h; fr.style.width = shape === 'tall' ? 'auto' : '100%'; fr.style.height = shape === 'tall' ? '78vh' : 'auto';
+  fr.onload = async () => { F = fr.contentWindow; await F.initRender(r.cfg); ready = true; }; fr.src = '/render/varnam.html?live=1&t=' + Date.now();
+  drawLines();
+}
+function drawLines(){ const box = $('lines'); box.innerHTML = '';
+  D.lines.forEach((l, i) => { const d = document.createElement('div'); d.className = 'ln' + (i === ptr && !D.sample_notes ? ' next' : ''); d.id = 'ln' + i;
+    d.innerHTML = '<span class="n">' + (i + 1) + '</span><span class="t' + (taps[i] != null ? ' tapped' : '') + '">' + fmt(l.t) + '</span><span><span class="p">' + l.part + '</span>' + l.words + '</span>';
+    d.onclick = () => { ptr = i; $('au').currentTime = Math.max(0, l.t - 2); drawLines(); }; box.append(d); }); cur = -1; }
+function save(values){ if (D.sample_notes && values.lines) return; clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => { const r = await (await fetch('/api/varnam_sync', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id, values})})).json();
+    if (r.error) { $('warn').textContent = r.error; $('warn').classList.remove('hidden'); return; }
+    if (D.sample_notes) return load();
+    D.lines = r.lines; if (ready) F.setTimes(r.lines.map(l => [l.t, l.d])); drawLines(); $('saved').classList.add('show'); setTimeout(() => $('saved').classList.remove('show'), 1200); }, 250); }
+function tap(){ if (D.sample_notes || ptr >= taps.length) return; const t = Math.round($('au').currentTime * 1000) / 1000; hist.push([ptr, taps[ptr]]); taps[ptr] = t; D.lines[ptr].t = t; ptr++; save({lines: taps});
+  const e = $('ln' + ptr); if (e) e.scrollIntoView({block: 'nearest'}); }
+$('tap').onclick = tap;
+$('undo').onclick = () => { const h = hist.pop(); if (!h) return; taps[h[0]] = h[1]; ptr = h[0]; save({lines: taps}); };
+$('clear').onclick = () => { if (!confirm('Clear every tapped time for this varnam?')) return; taps = taps.map(() => null); ptr = 0; hist = []; save({lines: taps}); };
+function nudge(d){ if (taps.some(t => t != null)) { taps = taps.map(t => t == null ? null : Math.max(0, Math.round((t + d) * 1000) / 1000)); save({lines: taps}); }
+  else { $('start').value = Math.max(0, Math.round((parseFloat($('start').value) + d) * 100) / 100); save({start: parseFloat($('start').value)}); } }
+$('earlier').onclick = () => nudge(-0.05); $('later').onclick = () => nudge(0.05);
+$('bpm').onchange = () => { const b = parseFloat($('bpm').value); if (b > 0) save({bpm: b}); };
+$('start').onchange = () => { const s = parseFloat($('start').value); if (s >= 0) save({start: s}); };
+$('shape').onchange = e => { shape = e.target.value; history.replaceState(null, '', '?id=' + id + '&shape=' + shape); load(); };
+$('infoBtn').onclick = () => $('help').classList.toggle('hidden');
+document.addEventListener('keydown', e => { if (e.code !== 'Space' || /INPUT|SELECT/.test(e.target.tagName)) return; e.preventDefault(); const a = $('au'); if (a.paused) a.play(); else tap(); });
+(function loop(){ requestAnimationFrame(loop); if (!ready || !D) return; const t = $('au').currentTime; try { F.drawFrame(t); } catch (e) {}
+  let c = -1; for (let i = 0; i < D.lines.length; i++) if (D.lines[i].t <= t) c = i;
+  if (c !== cur) { const o = $('ln' + cur), n = $('ln' + c); if (o) o.classList.remove('now'); if (n) { n.classList.add('now'); if (!$('au').paused) n.scrollIntoView({block: 'nearest'}); } cur = c; } })();
+load();
+</script></body></html>

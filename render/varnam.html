@@ -1,0 +1,173 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Noto+Sans+Telugu:wght@500;700&display=block" rel="stylesheet">
+<style>html,body{margin:0;background:#000}canvas{display:block}body.live canvas{width:100%;height:auto}</style></head><body><canvas id="c"></canvas>
+<script>
+/* The Varnanaateetam screen: a photo, and the notes and words of the varnam lighting up as they are sung.
+   initRender(cfg) once, then renderFrame(t) for a JPEG of second t, or drawFrame(t) to draw on the page (live preview). */
+var NAMED={gold:[42,85,62],purple:[270,80,68],silver:[215,25,85],rosegold:[15,80,78],emerald:[145,60,56],ice:[202,82,69],crimson:[6,75,59]};
+var LAT=['S','R','G','M','P','D','N'],TEL=['స','రి','గ','మ','ప','ద','ని'];
+var ADI=['clap','count','count','count','clap','wave','clap','wave'];
+var C,cv,g,W,H,U,HUE,SAT,LIT,L={},IMG=[],LOGO=null,SEG=[];
+var FS='"Cinzel",serif',FE='"Cormorant Garamond",Georgia,serif',FT='"Noto Sans Telugu","Kohinoor Telugu",sans-serif';
+function col(l,a,s){return 'hsla('+HUE+','+(s==null?SAT:s)+'%,'+l+'%,'+(a==null?1:a)+')';}
+function clamp(x,a,b){return x<a?a:(x>b?b:x);}
+function ease(x){x=clamp(x,0,1);return x*x*(3-2*x);}
+function loadImg(src){return new Promise(function(ok){var i=new Image();i.onload=function(){ok(i);};i.onerror=function(){ok(null);};i.src=src;});}
+function hasTel(s){return /[ఀ-౿]/.test(s);}
+
+async function initRender(cfg){
+  C=cfg;cv=document.getElementById('c');W=cv.width=cfg.w;H=cv.height=cfg.h;g=cv.getContext('2d');U=Math.min(W,H)/1080;
+  var m=/^hsl:\s*(-?[\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/.exec(cfg.theme||''),th=m?[+m[1],+m[2],+m[3]]:(NAMED[cfg.theme]||NAMED.gold);
+  HUE=th[0];SAT=th[1];LIT=th[2];
+  try{await Promise.all([document.fonts.load('700 40px "Cinzel"','A'),document.fonts.load('600 40px "Cinzel"','A'),document.fonts.load('600 40px "Cormorant Garamond"','A'),
+    document.fonts.load('italic 600 40px "Cormorant Garamond"','A'),document.fonts.load('700 40px "Noto Sans Telugu"','నిరిగ'),document.fonts.load('500 40px "Noto Sans Telugu"','నిరిగ')]);await document.fonts.ready;}catch(e){}
+  IMG=(await Promise.all((cfg.photos||[]).map(loadImg))).filter(Boolean);LOGO=cfg.logo?await loadImg(cfg.logo):null;
+  layout();return true;
+}
+function setTimes(a){for(var i=0;i<C.lines.length&&i<a.length;i++){C.lines[i].t=a[i][0];C.lines[i].d=a[i][1];}segments();}
+function segments(){SEG=[];C.lines.forEach(function(l,i){var s=SEG[SEG.length-1];if(s&&s.sec===l.sec&&s.speed===l.speed&&l.beat0>0)s.b=i;else SEG.push({sec:l.sec,speed:l.speed,a:i,b:i});});}
+
+function layout(){
+  var tall=H>W*1.2,wide=W>H*1.2,pad=(wide?64:44)*U;
+  var maxU=1;C.lines.forEach(function(l){maxU=Math.max(maxU,l.u.length);});
+  var showT=C.script!=='latin'&&C.lines.some(function(l){return l.te.length;}),showE=C.script!=='telugu'&&C.lines.some(function(l){return l.en.length;});
+  if(!showT&&!showE){showT=C.lines.some(function(l){return l.te.length;});showE=!showT&&C.lines.some(function(l){return l.en.length;});}
+  var colW=(W-2*pad)/maxU,fs=Math.min(66*U,colW*0.8),ft=fs*0.86,fe=fs*0.72;
+  var rowH=fs*1.25+(showT?ft*1.5:0)+(showE?fe*1.3:0),nextH=rowH*0.62,talaH=34*U,headH=70*U,ribH=C.ribbon?(tall?210:150)*U:0;
+  var bottom=H-(tall?0.115*H:0.045*H);
+  L={tall:tall,wide:wide,pad:pad,colW:colW,fs:fs,ft:ft,fe:fe,showT:showT,showE:showE,rowH:rowH,nextH:nextH,
+     nextY:bottom-nextH,rowY:bottom-nextH-18*U-rowH,talaY:bottom-nextH-18*U-rowH-talaH,headY:bottom-nextH-18*U-rowH-talaH-headH,top:tall?0.075*H:0.04*H};
+  L.ribY=L.headY-ribH-14*U;L.ribH=ribH;L.panelTop=L.ribY-30*U;
+  // the pitch line's range: what was measured, widened to at least one octave from Sa
+  if(C.ribbon){var v=C.ribbon.v.filter(function(x){return x!=null;}).sort(function(a,b){return a-b;});
+    var lo=v.length?v[Math.floor(v.length*0.02)]:0,hi=v.length?v[Math.floor(v.length*0.98)]:12;L.lo=Math.min(-1,Math.floor(lo)-1.5);L.hi=Math.max(13,Math.ceil(hi)+1.5);}
+  segments();
+}
+
+function background(t){
+  if(IMG.length){
+    var per=IMG.length>1?clamp(C.duration/IMG.length,12,40):1e9,k=Math.floor(t/per),ph=t-k*per;
+    photo(IMG[k%IMG.length],k,ph/Math.min(per,60),1);
+    if(IMG.length>1&&per-ph<2)photo(IMG[(k+1)%IMG.length],k+1,(ph-per)/per,ease((2-(per-ph))/2));
+    g.fillStyle='rgba(0,0,0,0.16)';g.fillRect(0,0,W,H);
+  }else{
+    var bg=g.createLinearGradient(0,0,W*0.4,H);bg.addColorStop(0,col(20,1,Math.min(SAT,55)));bg.addColorStop(0.55,col(9,1,Math.min(SAT,50)));bg.addColorStop(1,'#05040a');g.fillStyle=bg;g.fillRect(0,0,W,H);
+    for(var i=0;i<5;i++){var x=W*(0.5+0.42*Math.sin(t*0.05+i*1.9)),y=H*(0.36+0.3*Math.cos(t*0.04+i*2.7)),r=Math.max(W,H)*(0.22+0.05*i),rg=g.createRadialGradient(x,y,0,x,y,r);
+      rg.addColorStop(0,col(LIT,0.2));rg.addColorStop(1,col(LIT,0));g.fillStyle=rg;g.fillRect(0,0,W,H);}
+  }
+  var tg=g.createLinearGradient(0,0,0,L.top+260*U);tg.addColorStop(0,'rgba(4,3,10,0.82)');tg.addColorStop(1,'rgba(4,3,10,0)');g.fillStyle=tg;g.fillRect(0,0,W,L.top+260*U);
+  var y0=L.panelTop-170*U,bg2=g.createLinearGradient(0,y0,0,H);bg2.addColorStop(0,'rgba(5,4,12,0)');bg2.addColorStop(Math.min(0.95,200*U/(H-y0)),'rgba(5,4,12,0.8)');bg2.addColorStop(1,'rgba(5,4,12,0.95)');g.fillStyle=bg2;g.fillRect(0,y0,W,H-y0);
+}
+function photo(im,k,p,a){ // slow drift: a gentle zoom, sliding one way then the other
+  var z=1.05+0.09*clamp(p,0,1),s=Math.max(W/im.width,H/im.height)*z,w=im.width*s,h=im.height*s,dir=k%2?1:-1;
+  var x=(W-w)/2+dir*(w-W)*0.35*(clamp(p,0,1)-0.5),y=(H-h)*(L.tall?0.3:0.38);g.globalAlpha=a;g.drawImage(im,x,y,w,h);g.globalAlpha=1;
+}
+
+function txt(s,x,y,font,fill,align,blur){g.font=font;g.textAlign=align||'left';g.textBaseline='alphabetic';g.shadowColor='rgba(0,0,0,0.85)';g.shadowBlur=(blur==null?10:blur)*U;g.fillStyle=fill;g.fillText(s,x,y);g.shadowBlur=0;}
+function spaced(s,x,y,font,fill,sp,align){g.font=font;var w=0,i;for(i=0;i<s.length;i++)w+=g.measureText(s[i]).width+sp;w-=sp;var cx=align==='center'?x-w/2:x;
+  for(i=0;i<s.length;i++){txt(s[i],cx,y,font,fill,'left');cx+=g.measureText(s[i]).width+sp;}return w;}
+
+function header(){
+  var y=L.top,brand=(C.brand||'').toUpperCase(),sub=[C.varnam,C.composer,C.tala].filter(Boolean).join('  ·  '),lh=92*U,lw=LOGO?lh*LOGO.width/LOGO.height:0;
+  var bf='700 '+34*U+'px '+FS,tf='600 '+19*U+'px '+FS,rf='700 '+(L.wide?62:68)*U+'px '+FS,sf='italic 600 '+(L.wide?32:34)*U+'px '+FE;
+  if(L.wide){
+    if(LOGO)g.drawImage(LOGO,L.pad,y,lw,lh);
+    var bx=L.pad+lw+(LOGO?22*U:0);spaced(brand,bx,y+48*U,bf,col(86),5*U);spaced((C.tagline||'').toUpperCase(),bx,y+80*U,tf,'rgba(255,255,255,0.78)',4*U);
+    txt(C.raga,W-L.pad,y+56*U,rf,col(84),'right');txt(sub,W-L.pad,y+98*U,sf,'rgba(255,255,255,0.9)','right');
+  }else{
+    g.font=bf;var bw=0,i;for(i=0;i<brand.length;i++)bw+=g.measureText(brand[i]).width+5*U;var tot=lw+(LOGO?20*U:0)+bw,x0=(W-tot)/2;
+    if(LOGO)g.drawImage(LOGO,x0,y,lw,lh);var bx2=x0+lw+(LOGO?20*U:0);spaced(brand,bx2,y+48*U,bf,col(86),5*U);spaced((C.tagline||'').toUpperCase(),bx2,y+80*U,tf,'rgba(255,255,255,0.78)',4*U);
+    txt(C.raga,W/2,y+lh+84*U,rf,col(84),'center');txt(sub,W/2,y+lh+130*U,sf,'rgba(255,255,255,0.9)','center');
+  }
+}
+
+function sectionBar(t,cur){
+  var l=C.lines[cur],name=C.sections[l.sec]+(l.speed>1?'  ·  second speed':''),y=L.headY;
+  txt(name,L.pad,y+40*U,'600 '+40*U+'px '+FS,col(82),'left');
+  // one piece per part, in the order sung; it fills as the singing goes on
+  var x=L.pad,w=W-2*L.pad,by=y+56*U,bh=6*U,t0=C.lines[0].t,last=C.lines[C.lines.length-1],t1=last.t+last.d,gap=5*U;
+  SEG.forEach(function(s){var a=(C.lines[s.a].t-t0)/(t1-t0),b=(C.lines[s.b].t+C.lines[s.b].d-t0)/(t1-t0),sx=x+a*w,sw=Math.max(2,(b-a)*w-gap);
+    g.fillStyle='rgba(255,255,255,0.2)';g.fillRect(sx,by,sw,bh);var f=clamp((t-C.lines[s.a].t)/(C.lines[s.b].t+C.lines[s.b].d-C.lines[s.a].t),0,1);
+    if(f>0){g.fillStyle=col(72);g.fillRect(sx,by,sw*f,bh);}});
+}
+
+function tala(t,l,x0,cw){
+  var per=C.npb*l.speed,nb=Math.ceil(l.u.length/per),prog=(t-l.t)/l.d*l.u.length,y=L.talaY+L.fs*0.1+10*U,r=9*U;
+  for(var b=0;b<nb;b++){var kind=C.beats===8?ADI[Math.round(l.beat0+b)%8]:(Math.round(l.beat0+b)%C.beats===0?'clap':'count'),x=x0+(b*per+0.5)*cw,inb=prog-b*per,on=inb>=0&&inb<per&&prog<l.u.length;
+    var glow=on?1-0.75*clamp(inb/per,0,1):0,rr=(kind==='count'?r*0.55:r)*(1+0.5*glow);
+    g.beginPath();g.arc(x,y,rr,0,7);g.shadowColor=col(70);g.shadowBlur=on?22*U*glow:0;
+    if(kind==='wave'){g.lineWidth=3*U;g.strokeStyle=on?col(80):'rgba(255,255,255,0.5)';g.stroke();}else{g.fillStyle=on?col(80):'rgba(255,255,255,'+(kind==='clap'?0.6:0.4)+')';g.fill();}
+    g.shadowBlur=0;
+    if(b){g.fillStyle='rgba(255,255,255,0.13)';g.fillRect(x0+b*per*cw-1*U,L.talaY+30*U,2*U,L.rowH*(cw/L.colW)-6*U);}}
+}
+
+function words(list,l,x0,cw,y,font,size,prog,alpha){
+  if(!list.length)return;g.font=font.replace('{s}',size);
+  var k=1,i;for(i=0;i<list.length;i++){var nx=i+1<list.length?list[i+1][0]:l.u.length,room=(nx-list[i][0])*cw-size*0.18;k=Math.min(k,room/Math.max(1,g.measureText(list[i][1]).width));}
+  k=clamp(k,0.55,1);var f=font.replace('{s}',size*k);
+  for(i=0;i<list.length;i++){var a=list[i][0],b=i+1<list.length?list[i+1][0]:l.u.length,x=x0+a*cw+cw*0.5-size*k*0.3,s=list[i][1];
+    var state=prog==null?-1:(prog>=b?1:(prog>=a?0:-1));g.globalAlpha=alpha;
+    if(state<0)txt(s,x,y,f,'rgba(255,255,255,0.86)');
+    else if(state>0)txt(s,x,y,f,col(80));
+    else{txt(s,x,y,f,'rgba(255,255,255,0.92)');g.font=f;var w=g.measureText(s).width,fr=clamp((prog-a)/Math.min(b-a,3),0,1);
+      g.save();g.beginPath();g.rect(x-4*U,y-size*1.2,(w+8*U)*fr,size*1.8);g.clip();g.shadowColor=col(65);g.shadowBlur=18*U;g.fillStyle=col(76);g.fillText(s,x,y);g.restore();g.shadowBlur=0;}
+    g.globalAlpha=1;}
+}
+
+/* one line of notes with its words. prog: how many note places have been sung (null = not started) */
+function row(l,y,k,alpha,t){
+  var cw=L.colW*k,x0=(W-cw*l.u.length)/2,prog=t==null?null:(t-l.t)/l.d*l.u.length,done=prog!=null&&prog>=l.u.length,fs=L.fs*k,names=C.script==='telugu'?TEL:LAT;
+  var act=-1;if(prog!=null&&!done)for(var j=Math.floor(prog);j>=0;j--){if(Array.isArray(l.u[j])){act=j;break;}if(l.u[j]===-1)break;}
+  var by=y+fs;
+  for(var i=0;i<l.u.length;i++){var u=l.u[i],x=x0+(i+0.5)*cw,sung=prog!=null&&prog>=i+1,on=i===act;g.globalAlpha=alpha;
+    if(Array.isArray(u)){var pop=on?1+0.16*(1-clamp((prog-i)/1.2,0,1)):1,f=(C.script==='telugu'?'700 '+fs*0.82*pop+'px '+FT:'700 '+fs*pop+'px '+FS);
+      if(on){g.shadowColor=col(62);g.shadowBlur=30*U;g.font=f;g.textAlign='center';g.fillStyle=col(74);g.fillText(names[u[0]],x,by);g.shadowBlur=0;}
+      txt(names[u[0]],x,by,f,on?col(90):(sung?col(78):'rgba(255,255,255,0.9)'),'center',on?4:10);
+      if(u[1]){g.fillStyle=on?col(90):(sung?col(78):'rgba(255,255,255,0.9)');for(var d=0;d<Math.abs(u[1]);d++){g.beginPath();g.arc(x+(d-(Math.abs(u[1])-1)/2)*fs*0.2,u[1]>0?by-fs*0.92:by+fs*0.2,fs*0.065,0,7);g.fill();}}
+    }else{var held=prog!=null&&act>=0&&i>act&&i<=prog&&u===0;g.fillStyle=u===-1?'rgba(255,255,255,0.35)':(held||sung?col(74,0.9):'rgba(255,255,255,0.4)');
+      if(u===-1)g.fillRect(x-fs*0.14,by-fs*0.32,fs*0.28,fs*0.05);else{g.beginPath();g.arc(x,by-fs*0.3,fs*0.07,0,7);g.fill();}}
+    g.globalAlpha=1;}
+  // the note being held draws a line as long as it has been held
+  if(act>=0&&k===1){var end=act+1;while(end<l.u.length&&l.u[end]===0)end++;if(end-act>1){var xa=x0+(act+0.5)*cw+fs*0.42,xb=x0+(Math.min(prog,end-0.5)+0.5)*cw;
+    if(xb>xa){g.strokeStyle=col(74,0.85);g.lineWidth=4*U;g.lineCap='round';g.shadowColor=col(62);g.shadowBlur=14*U;g.beginPath();g.moveTo(xa,by-fs*0.3);g.lineTo(xb,by-fs*0.3);g.stroke();g.shadowBlur=0;}}}
+  var yy=by+fs*0.25;
+  if(L.showT){yy+=L.ft*k*1.25;words(l.te,l,x0,cw,yy,'700 {s}px '+FT,L.ft*k,done?l.u.length:prog,alpha);yy+=L.ft*k*0.25;}
+  if(L.showE){yy+=L.fe*k*1.05;words(l.en,l,x0,cw,yy,'600 {s}px '+FE,L.fe*k,done?l.u.length:prog,alpha);}
+  return x0;
+}
+
+function ribbon(t){
+  if(!C.ribbon)return;var R=C.ribbon,x0=L.pad,w=W-2*L.pad,y0=L.ribY,h=L.ribH,past=4.5,fut=2.5,nowX=x0+w*past/(past+fut),pps=w/(past+fut);
+  var Y=function(s){return y0+h-(s-L.lo)/(L.hi-L.lo)*h;},names=C.script==='telugu'?TEL:LAT;
+  g.fillStyle='rgba(6,5,14,0.42)';rr(x0-14*U,y0-10*U,w+28*U,h+20*U,18*U);g.fill();
+  for(var o=-1;o<=1;o++)for(var i=0;i<7;i++){if(!C.present[i])continue;var s=C.semis[i]+12*o;if(s<L.lo+0.5||s>L.hi-0.5)continue;var y=Y(s),sa=i===0;
+    g.fillStyle='rgba(255,255,255,'+(sa?0.3:0.13)+')';g.fillRect(x0+34*U,y-(sa?1:0.5)*U,w-34*U,(sa?2:1)*U);
+    if(h/(L.hi-L.lo)>=10*U||i===0||(i===4&&h/(L.hi-L.lo)>=4*U))txt(names[i],x0+14*U,y+7*U,(C.script==='telugu'?'500 '+18*U+'px '+FT:'600 '+20*U+'px '+FS),'rgba(255,255,255,'+(sa?0.9:0.6)+')','center',4);}
+  g.save();g.beginPath();g.rect(x0+34*U,y0-8*U,w-34*U,h+16*U);g.clip();g.lineCap='round';g.lineJoin='round';
+  var a=Math.max(0,Math.floor((t-past)/R.hop)),b=Math.min(R.v.length-1,Math.ceil((t+fut)/R.hop)),ni=clamp(Math.round(t/R.hop),0,R.v.length-1);
+  function path(from,to){g.beginPath();var pen=false;for(var i=from;i<=to;i++){var v=R.v[i];if(v==null){pen=false;continue;}var x=nowX+(i*R.hop-t)*pps,y=Y(v);if(pen&&Math.abs(v-R.v[i-1])<4)g.lineTo(x,y);else g.moveTo(x,y);pen=true;}g.stroke();}
+  g.strokeStyle='rgba(255,255,255,0.28)';g.lineWidth=3*U;path(ni,b);
+  var gr=g.createLinearGradient(x0,0,nowX,0);gr.addColorStop(0,col(70,0));gr.addColorStop(0.35,col(70,0.7));gr.addColorStop(1,col(84,1));
+  g.strokeStyle=gr;g.lineWidth=6*U;g.shadowColor=col(62);g.shadowBlur=16*U;path(a,ni);g.shadowBlur=0;g.restore();
+  var nv=R.v[ni];if(nv!=null){var ny=Y(nv);g.shadowColor=col(70);g.shadowBlur=26*U;g.fillStyle='#fff';g.beginPath();g.arc(nowX,ny,9*U,0,7);g.fill();g.shadowBlur=0;}
+}
+function rr(x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();}
+
+function drawFrame(t){
+  g.setTransform(1,0,0,1,0,0);g.globalAlpha=1;g.shadowBlur=0;g.clearRect(0,0,W,H);
+  background(t);header();ribbon(t);
+  var n=C.lines.length,cur=0;for(var i=0;i<n;i++)if(C.lines[i].t<=t)cur=i;
+  var l=C.lines[cur],started=t>=l.t;
+  // a long pause after a line: bring the next line up and let it wait
+  if(started&&cur+1<n&&t>l.t+l.d+0.8&&C.lines[cur+1].t-(l.t+l.d)>1.6){cur++;l=C.lines[cur];started=false;}
+  var a=started?ease((t-l.t)/0.3):1,slide=started&&cur>0&&C.lines[cur-1].t+C.lines[cur-1].d>l.t-0.5?(1-a):0;
+  sectionBar(t,cur);
+  var y=L.rowY+slide*(L.rowH*0.6),x0=row(l,y,1,0.55+0.45*(started?a:0.4),started?t:null);
+  tala(started?t:-1e9,l,x0,L.colW);
+  if(cur+1<n)row(C.lines[cur+1],L.nextY,0.62,0.55*(1-slide),null);
+  var fi=C.fadeIn?clamp((t-(C.from||0))/C.fadeIn,0,1):1,fo=C.until?clamp((C.until-t)/1.2,0,1):1,dark=1-Math.min(fi,fo);
+  if(dark>0){g.fillStyle='rgba(0,0,0,'+dark+')';g.fillRect(0,0,W,H);}
+}
+function renderFrame(t){drawFrame(t);return cv.toDataURL('image/jpeg',0.93).split(',')[1];}
+if(/[?&]live=1/.test(location.search))document.body.className='live';
+</script></body></html>

@@ -10,6 +10,10 @@ ap.add_argument("--w", type=int, default=1280); ap.add_argument("--h", type=int,
 ap.add_argument("--theme", default="gold")
 ap.add_argument("--dust", type=float, default=0.5)
 ap.add_argument("--fps", type=int, default=30)
+ap.add_argument("--design", default="classic", help="classic, royal, elegant, calligraphy, heritage, telugu or royal_classic")
+ap.add_argument("--logo", help="picture shown at the top centre (PNG with a clear background)")
+ap.add_argument("--presents", default="", help="small line above the title")
+ap.add_argument("--tagline", default="", help="tag line under the title")
 ap.add_argument("--audio"); ap.add_argument("--audio-start", type=float, default=0.0)
 a = ap.parse_args()
 a.text = a.text.replace("\\n", "\n").replace("|", "\n")      # lines can be separated with | or \n
@@ -20,13 +24,16 @@ if a.audio:
     cmd += ["-ss", str(a.audio_start), "-t", str(a.seconds), "-i", a.audio]
 cmd += ["-c:v", "libx264", "-crf", "14", "-preset", "slow", "-pix_fmt", "yuv420p", "-r", str(a.fps)]
 if a.audio:
-    cmd += ["-map", "0:v", "-map", "1:a", "-c:a", "aac", "-b:a", "192k"]
+    # the sound never starts or stops with a jump: a short fade in, a fade out at the end, and silence if it is shorter than the title
+    cmd += ["-map", "0:v", "-map", "1:a", "-af", f"afade=t=in:d=0.04,afade=t=out:st={max(0, a.seconds - 0.5):.2f}:d=0.5,apad", "-t", f"{n / a.fps:.3f}", "-c:a", "aac", "-b:a", "192k"]
 cmd += [a.out]
 with sync_playwright() as p:
     try: b = p.chromium.launch(channel="chrome", headless=True)
     except Exception: b = p.chromium.launch(headless=True)
     pg = b.new_page(viewport={"width": a.w, "height": a.h}); pg.goto(html)
-    pg.evaluate("c => initRender(c)", {"text": a.text, "seconds": a.seconds, "dust": a.dust, "theme": a.theme, "w": a.w, "h": a.h})
+    logo = "data:image/png;base64," + base64.b64encode(Path(a.logo).read_bytes()).decode() if a.logo else None
+    pg.evaluate("c => initRender(c)", {"text": a.text, "seconds": a.seconds, "dust": a.dust, "theme": a.theme, "w": a.w, "h": a.h,
+                                       "logo": logo, "presents": a.presents, "tagline": a.tagline, "design": a.design})
     ff = subprocess.Popen(cmd, stdin=subprocess.PIPE)
     for i in range(n):
         ff.stdin.write(base64.b64decode(pg.evaluate("t => renderFrame(t)", i / a.fps)))

@@ -1,0 +1,136 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Varnanaateetam</title>
+<style>
+:root{--bg:#0e0d16;--card:#191726;--line:#2e2b42;--ink:#f3f1fa;--mute:#a9a4c0;--accent:#c9a4ff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:19px/1.45 -apple-system,"Segoe UI",sans-serif}
+.tabs{display:flex;gap:6px;background:#0b0a12;padding:10px 20px 0;border-bottom:1px solid #2e2b42}.tabs a{font:700 19px -apple-system,"Segoe UI",sans-serif;color:#a9a4c0;text-decoration:none;padding:11px 20px;border-radius:12px 12px 0 0}.tabs a.on{background:#7c4dff;color:#fff}.tabs a:hover{color:#fff}
+header{padding:24px 28px 4px}h1{margin:0;font-size:34px}header p{margin:6px 0 0;color:var(--mute)}
+section{margin:22px 28px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px 22px}
+h2{margin:0 0 4px;font-size:26px;display:flex;align-items:center;gap:10px}.sub{color:var(--mute);margin:0 0 16px;font-size:18px}
+.row{display:flex;gap:20px;flex-wrap:wrap;align-items:flex-end}
+.f{display:flex;flex-direction:column;gap:5px;font-size:16px;color:var(--mute);font-weight:600}
+input[type=text],input[type=number],select{font:inherit;font-size:19px;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:#12111c;color:var(--ink);min-width:190px}
+input[type=number]{min-width:110px;width:110px}
+.info{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--mute);background:none;color:var(--mute);font:italic 700 17px Georgia,serif;cursor:pointer;flex:none}
+.help{color:var(--mute);font-size:18px;margin:10px 0 0;max-width:900px}.hidden{display:none!important}
+.saved{color:#7fe0a8;font-size:17px;font-weight:600;margin-left:8px;opacity:0;transition:opacity .3s}.saved.show{opacity:1}
+#videos{display:grid;grid-template-columns:repeat(auto-fill,minmax(520px,1fr));gap:22px;margin:0 28px 60px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.stage{background:#000}.stage iframe{border:0;width:100%;aspect-ratio:4/3;display:block}
+.meta{padding:16px 18px 20px;display:flex;flex-direction:column;gap:14px}
+.meta h3{margin:0;font-size:27px;display:flex;align-items:center;gap:10px}.dot{width:22px;height:22px;border-radius:50%;display:inline-block}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font:inherit;font-size:17px;font-weight:600;padding:7px 13px 7px 10px;border-radius:999px;border:2px solid var(--line);background:#12111c;color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:8px}
+.chip i{width:18px;height:18px;border-radius:50%;display:inline-block}.chip.on{border-color:#fff;background:#262338}
+.lab{font-size:16px;color:var(--mute);font-weight:600;margin-bottom:6px}
+.files{font-size:18px;color:var(--mute)}.files b{color:var(--ink)}code{background:#12111c;padding:2px 7px;border-radius:6px;font-size:17px}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+button.act{font:inherit;font-size:19px;font-weight:700;padding:11px 18px;border-radius:12px;border:1px solid var(--line);background:#262338;color:var(--ink);cursor:pointer}
+button.act.go{background:linear-gradient(120deg,#8a5cf0,#5b3bc4);border-color:transparent}button.act:disabled{opacity:.5;cursor:wait}
+.msg{font-size:18px;color:var(--mute);word-break:break-all}.card video{width:100%;display:block;border-radius:12px;background:#000}
+.soon{font-size:18px;color:#ffdf9c;border:1px dashed #7a5a1c;border-radius:10px;padding:9px 12px}
+.have{display:flex;gap:10px;flex-wrap:wrap;font-size:18px;font-weight:600}.have span{padding:5px 12px;border-radius:999px;background:#12111c;border:1px solid var(--line)}.have .y{color:#7fe0a8}.have .n{color:#ffb38a}
+a.act{text-decoration:none;display:inline-block;font-size:19px;font-weight:700;padding:11px 18px;border-radius:12px;border:1px solid var(--line);background:#262338;color:var(--ink)}
+.sep{border-top:1px solid var(--line);padding-top:14px}.sep h4{margin:0 0 10px;font-size:22px;display:flex;align-items:center;gap:10px}
+.outs a{color:var(--accent);font-size:18px;display:block;word-break:break-all}input.sec{min-width:0;width:100px}
+</style></head><body>
+<nav class="tabs"><a href="/">Raaga Thoram</a><a href="/varnanaateetam" class="on">Varnanaateetam</a><a href="/title-designs">Title designs</a></nav>
+<header><h1>Varnanaateetam</h1><p>The VARNAM Project · six varnam videos, each with its own colour</p></header>
+<section>
+  <h2>Preferences for every Varnanaateetam video <button class="info" id="prefInfo">i</button><span class="saved" id="prefSaved">✓ Saved</span></h2>
+  <p class="help hidden" id="prefHelp">These apply to all six videos and are kept apart from the Raaga Thoram episode settings. Changes are saved as you make them. Each video below can still choose its own colour and, if you want, its own title design.</p>
+  <div class="row" style="margin-top:14px">
+    <label class="f">Title<input type="text" id="p_title"></label>
+    <label class="f">Line above the title<input type="text" id="p_presents" style="min-width:300px"></label>
+    <label class="f">Tag line<input type="text" id="p_tagline"></label>
+    <label class="f">Academy logo<select id="p_logo"><option value="1">Show</option><option value="0">Hide</option></select></label>
+    <label class="f">Title design<select id="p_design"></select></label>
+    <label class="f">Title seconds<input type="number" id="p_seconds" min="4" max="12" step="0.5"></label>
+    <label class="f">Sparkle dust %<input type="number" id="p_dust" min="0" max="150" step="5"></label>
+    <label class="f">Title music<select id="p_music"></select></label>
+    <label class="f">Add your own audio file<input type="file" id="p_file" accept="audio/*,.m4a,.mp3,.wav,.aac,.flac" style="font-size:17px;color:var(--mute);max-width:260px"></label>
+    <label class="f">Words on screen<select id="p_script"><option value="both">Telugu and English</option><option value="telugu">Telugu only</option><option value="latin">English only</option></select></label>
+  </div>
+  <p class="help"><a href="/title-designs" style="color:var(--accent);font-weight:600">Watch all six title designs</a></p>
+</section>
+<div id="videos"></div>
+<script>
+const COLOURS = [['Rose pink','hsl:330,78,66','#f06bb0'],['Gold','gold','#f2c350'],['Kurinji violet','hsl:258,75,68','#9d7df0'],['Sapphire','hsl:222,85,64','#5a86f2'],['Silver','silver','#dfe5ee'],['Spring green','hsl:100,65,55','#7fd64a'],
+  ['Purple','purple','#ab6cf0'],['Rose gold','rosegold','#f7b9a6'],['Emerald','emerald','#52cf88'],['Ice','ice','#6fc4f2'],['Crimson','crimson','#e55a4a']];
+const DESIGNS = [['classic','1 · Classic Sparkle'],['royal','2 · Royal Seal'],['elegant','3 · Elegant Focus'],['calligraphy','4 · Calligraphy'],['heritage','5 · Heritage'],['telugu','6 · Telugu'],['royal_classic','7 · Royal Seal + Classic lettering']];
+const TELUGU = 'వర్ణనాతీతం', $ = id => document.getElementById(id);
+let S = null;
+const post = (id, values) => fetch('/api/varnam', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id, values})}).then(r => r.json());
+const swatch = t => (COLOURS.find(c => c[1] === t) || [0, 0, '#888'])[2];
+function titleVals(v, shape){ const d = S.defaults, design = v.settings.design || d.intro_design; let lines = Array.isArray(d.intro_title) ? d.intro_title : [d.intro_title];
+  if (design === 'telugu' && !/[ఀ-౿]/.test(lines.join(''))) lines = [TELUGU];
+  return {intro_title: lines, intro_theme: v.settings.colour, intro_seconds: d.intro_seconds, intro_dust: d.intro_dust, intro_design: design, intro_logo: !!d.intro_logo, intro_presents: d.intro_presents, intro_tagline: d.intro_tagline, title_music: d.title_music || 'raga', raga: v.settings.raga, shape}; }
+function fillMusic(){ const d = S.defaults; $('p_music').innerHTML = [['raga','Soft piano in each varnam\'s raga'],['sparkle','Sparkle sound (the first one)'],['none','No sound']].concat((S.music || []).map(n => [n, 'Your file: ' + n])).map(x => '<option value="' + x[0].replace(/"/g, '&quot;') + '">' + x[1] + '</option>').join('');
+  $('p_music').value = d.title_music || 'raga'; if ($('p_music').selectedIndex < 0) $('p_music').value = 'raga'; }
+function playUrl(v){ const k = titleVals(v, 'wide'); return '/title/render.html?play=' + encodeURIComponent(JSON.stringify({text: k.intro_title.join('\n'), seconds: k.intro_seconds, dust: k.intro_dust, theme: k.intro_theme, w: 640, h: 480,
+  design: k.intro_design, logo: k.intro_logo ? '/brand/aaa_logo.png' : null, presents: k.intro_presents, tagline: k.intro_tagline})); }
+function card(v){
+  const c = document.createElement('div'); c.className = 'card'; const s = v.settings;
+  c.innerHTML = '<div class="stage"><iframe loading="lazy"></iframe></div><div class="meta"><h3><span class="dot"></span>' + s.raga + '</h3>' +
+    '<div><div class="lab">Colour of this video</div><div class="chips"></div></div>' +
+    '<div class="row"><label class="f">Varnam name<input type="text" class="vname" placeholder="first words of the varnam"></label><label class="f">Composer<input type="text" class="vcomp"></label>' +
+    '<label class="f">Title design<select class="vdesign"><option value="">Same as preferences</option>' + DESIGNS.map(d => '<option value="' + d[0] + '">' + d[1] + '</option>').join('') + '</select></label></div>' +
+    '<div class="files"></div><div class="mus"><div class="lab">Title music for this varnam</div><audio controls preload="none" style="width:100%"></audio></div><div class="btns"><button class="act go" data-shape="wide">★ Make title · wide</button><button class="act go" data-shape="tall">★ Make title · tall</button><button class="act" data-shape="square">Square</button></div>' +
+    '<div class="msg tmsg hidden"></div><video controls class="hidden tv"></video>' +
+    '<div class="sep"><h4>The varnam video <button class="info vinfo">i</button></h4><p class="help hidden vhelp" style="margin:0 0 12px">The video shows your photo with the notes and words lighting up as they are sung, the tala marks and a line that follows the voice. ' +
+    'Put three things in this video\'s folder: the notation saved as notation.txt (the file varnanaateetam/notation_example.txt shows how to write it), the audio recording, and one or more photos. ' +
+    'Then open Preview and sync to line the words up with the singing, and make the video. A quick look is half size and 40 seconds. The reel is one minute, tall, starting at the second you type.</p>' +
+    '<div class="have"></div><div class="soon hidden" style="margin-top:12px"></div>' +
+    '<div class="btns" style="margin-top:14px"><a class="act sync">Preview and sync</a><button class="act" data-run="preview" data-vshape="wide">Quick look</button><button class="act go" data-run="full" data-vshape="wide">★ Make video · wide</button>' +
+    '<button class="act go" data-run="full" data-vshape="tall">★ Make video · tall</button><button class="act" data-run="full" data-vshape="square">Square</button></div>' +
+    '<div class="btns" style="margin-top:10px;align-items:center"><button class="act" data-run="reel" data-vshape="tall">1-minute reel from second</button><input type="number" class="sec" min="0" step="1" value="0"></div>' +
+    '<div class="msg vmsg hidden" style="margin-top:12px"></div><video controls class="hidden vv" style="margin-top:12px"></video><div class="outs" style="margin-top:10px"></div></div></div>';
+  const f = c.querySelector('iframe'), chips = c.querySelector('.chips');
+  const mus = c.querySelector('.mus'), mc = S.defaults.title_music || 'raga'; mus.classList.toggle('hidden', mc === 'none');
+  mus.querySelector('audio').src = '/title-music?choice=' + encodeURIComponent(mc) + '&raga=' + encodeURIComponent(s.raga) + '&seconds=' + S.defaults.intro_seconds;
+  const refresh = () => { f.src = playUrl(v); c.querySelector('.dot').style.background = swatch(s.colour);
+    chips.innerHTML = ''; COLOURS.forEach(([n, t, col]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'chip' + (t === s.colour ? ' on' : ''); b.innerHTML = '<i style="background:' + col + '"></i>' + n;
+      b.onclick = () => { s.colour = t; post(v.id, {colour: t}); refresh(); }; chips.append(b); }); };
+  c.querySelector('.vname').value = s.varnam || ''; c.querySelector('.vcomp').value = s.composer || ''; c.querySelector('.vdesign').value = s.design || '';
+  c.querySelector('.vname').onchange = e => { s.varnam = e.target.value.trim(); post(v.id, {varnam: s.varnam}); };
+  c.querySelector('.vcomp').onchange = e => { s.composer = e.target.value.trim(); post(v.id, {composer: s.composer}); };
+  c.querySelector('.vdesign').onchange = e => { s.design = e.target.value; post(v.id, {design: s.design}); refresh(); };
+  c.querySelector('.files').innerHTML = v.files.length ? 'Files in <code>' + v.folder + '</code>: <b>' + v.files.join(', ') + '</b>' : 'No audio or photo yet. Put them in <code>' + v.folder + '</code>';
+  c.querySelectorAll('button[data-shape]').forEach(b => b.onclick = async () => { const m = c.querySelector('.tmsg'); c.querySelectorAll('button[data-shape]').forEach(x => x.disabled = true); m.classList.remove('hidden'); m.textContent = 'Making the title… about a minute.';
+    try { const r = await (await fetch('/api/make_title', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({values: titleVals(v, b.dataset.shape)})})).json();
+      if (r.error) throw new Error(r.error); const vd = c.querySelector('.tv'); vd.src = r.url + '?t=' + Date.now(); vd.classList.remove('hidden'); vd.play().catch(() => {}); m.textContent = 'Saved as ' + r.file; }
+    catch (err) { m.textContent = 'Could not make it: ' + err.message; } c.querySelectorAll('button[data-shape]').forEach(x => x.disabled = false); });
+  const h = v.have, sample = !h.notation || !h.audio, soon = c.querySelector('.soon');
+  c.querySelector('.have').innerHTML = '<span class="' + (h.notation ? 'y">✓ Notation' : 'n">✗ No notation yet') + '</span><span class="' + (h.audio ? 'y">✓ Audio' : 'n">✗ No audio yet') + '</span><span class="' + (h.photos ? 'y">✓ ' + h.photos + (h.photos > 1 ? ' photos' : ' photo') : 'n">✗ No photo yet') + '</span>';
+  if (sample) { soon.classList.remove('hidden'); soon.textContent = 'Until the ' + [!h.notation && 'notation', !h.audio && 'audio'].filter(Boolean).join(' and ') + (!h.notation && !h.audio ? ' are' : ' is') + ' here, the buttons below make a SAMPLE (' + [!h.notation && 'sample notes', !h.audio && 'test tones'].filter(Boolean).join(', ') + ') so you can see the look in this colour.'; }
+  c.querySelector('.vinfo').onclick = () => c.querySelector('.vhelp').classList.toggle('hidden');
+  c.querySelector('.sync').href = '/varnanaateetam/sync?id=' + v.id;
+  const outs = () => { c.querySelector('.outs').innerHTML = v.outputs.length ? '<div class="lab">Videos made so far</div>' + v.outputs.map(n => '<a href="/varnam-file/' + v.id + '/out/' + n + '" target="_blank">' + n + '</a>').join('') : ''; }; outs();
+  c.querySelectorAll('button[data-run]').forEach(b => b.onclick = async () => { const m = c.querySelector('.vmsg'), all = document.querySelectorAll('button[data-run]'); m.classList.remove('hidden');
+    try { const r = await (await fetch('/api/varnam_run', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id: v.id, mode: b.dataset.run, shape: b.dataset.vshape, example: sample, start: parseFloat(c.querySelector('.sec').value) || 0})})).json();
+      if (r.error) throw new Error(r.error === 'something is already running' ? 'Another video is being made. Wait for it to finish.' : r.error);
+      all.forEach(x => x.disabled = true); m.textContent = 'Starting…';
+      for (;;) { await new Promise(ok => setTimeout(ok, 1000)); const g = await (await fetch('/api/log')).json(), last = g.lines[g.lines.length - 1] || '';
+        if (g.running) { m.textContent = last.trim() || 'Working…'; continue; }
+        const done = g.lines.find(x => x.startsWith('DONE '));
+        if (g.code === 0 && done) { const name = done.slice(5).split('/').pop(), vd = c.querySelector('.vv'); vd.src = '/varnam-file/' + v.id + '/out/' + name + '?t=' + Date.now(); vd.classList.remove('hidden');
+          m.textContent = g.lines.filter(x => !x.startsWith('  rendered') && !x.startsWith('DONE')).slice(1).join(' ') + ' Saved as ' + done.slice(5); if (!v.outputs.includes(name)) v.outputs.unshift(name); outs(); }
+        else m.textContent = 'Could not make it: ' + g.lines.slice(-3).join(' ');
+        break; } }
+    catch (err) { m.textContent = err.message; } all.forEach(x => x.disabled = false); });
+  refresh(); return c;
+}
+function drawVideos(){ const g = $('videos'); g.innerHTML = ''; S.videos.forEach(v => g.append(card(v))); }
+function fillPrefs(){ const d = S.defaults; $('p_design').innerHTML = DESIGNS.map(x => '<option value="' + x[0] + '">' + x[1] + '</option>').join('');
+  $('p_title').value = (Array.isArray(d.intro_title) ? d.intro_title : [d.intro_title]).join(' | '); $('p_presents').value = d.intro_presents; $('p_tagline').value = d.intro_tagline; $('p_logo').value = d.intro_logo ? '1' : '0';
+  $('p_design').value = d.intro_design; $('p_seconds').value = d.intro_seconds; $('p_dust').value = Math.round(d.intro_dust * 100); $('p_script').value = d.script; fillMusic(); }
+async function savePrefs(){ const values = {intro_title: $('p_title').value.split('|').map(x => x.trim()).filter(Boolean), intro_presents: $('p_presents').value.trim(), intro_tagline: $('p_tagline').value.trim(), intro_logo: $('p_logo').value === '1',
+    intro_design: $('p_design').value, intro_seconds: parseFloat($('p_seconds').value) || 7, intro_dust: (parseFloat($('p_dust').value) || 0) / 100, script: $('p_script').value, title_music: $('p_music').value};
+  if (!values.intro_title.length) values.intro_title = ['Varnanaateetam'];
+  Object.assign(S.defaults, values); await post('defaults', values); $('prefSaved').classList.add('show'); setTimeout(() => $('prefSaved').classList.remove('show'), 1500); drawVideos(); }
+$('prefInfo').onclick = () => $('prefHelp').classList.toggle('hidden');
+$('p_file').onchange = async e => { const f = e.target.files[0]; if (!f) return; const r = await (await fetch('/api/title_audio?name=' + encodeURIComponent(f.name), {method: 'POST', body: f})).json();
+  if (r.error) { alert(r.error); return; } S.music = r.music; S.defaults.title_music = r.name; fillMusic(); $('p_music').value = r.name; e.target.value = ''; savePrefs(); };
+['p_title','p_presents','p_tagline','p_logo','p_design','p_seconds','p_dust','p_script','p_music'].forEach(i => $(i).addEventListener('change', savePrefs));
+fetch('/api/varnam').then(r => r.json()).then(s => { S = s; fillPrefs(); drawVideos(); });
+</script></body></html>

@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8">
-<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&display=block" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@1,600&family=Playfair+Display:wght@700&family=Great+Vibes&family=Yatra+One&family=Ramabhadra&display=block" rel="stylesheet">
 <style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body><canvas id="c"></canvas>
 <script>
 var THEMES={
@@ -33,70 +33,175 @@ function themeFor(name){
   var m=/^hsl:\s*(-?[\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*$/.exec(name||'');
   return m ? buildTheme(parseFloat(m[1]),parseFloat(m[2]),parseFloat(m[3])) : THEMES.gold;
 }
-var cv=document.getElementById('c'),g,W,H,CFG,L,P=[],TG=null;
+var cv=document.getElementById('c'),g,W,H,CFG,L,P=[],TG=null,LOGO=null,LOGOIMG=null,D=0,FONT,DS,SPARK=null,SPREAD=false,KS=1,KP=1,RV=1,SHINES=[];
+/* title fonts ({s} = size). upper: the title is written in capitals. k: size compared with the default */
+var FONTS={decorative:{f:'700 {s}px "Cinzel Decorative"',upper:true},cinzel:{f:'700 {s}px "Cinzel"',upper:true},playfair:{f:'700 {s}px "Playfair Display"'},
+  script:{f:'400 {s}px "Great Vibes"',k:1.35},yatra:{f:'400 {s}px "Yatra One"'},telugu:{f:'400 {s}px "Ramabhadra"',k:1.5,low:0.6}};
+/* ready-made designs. font: title font. logo: plain | tint | ring | ring_tint. tag: caps | lines | script | box. pre: italic | caps. anim: sparkle | sweep | focus */
+var DESIGNS={classic:{font:'decorative',logo:'plain',tag:'caps',pre:'italic',anim:'sparkle'},
+  royal:{font:'cinzel',logo:'ring',tag:'lines',pre:'caps',anim:'sweep'},
+  elegant:{font:'playfair',logo:'tint',tag:'box',pre:'italic',anim:'focus'},
+  calligraphy:{font:'script',logo:'plain',tag:'caps',pre:'italic',anim:'sweep'},
+  heritage:{font:'yatra',logo:'ring_tint',tag:'box',pre:'caps',anim:'sparkle'},
+  telugu:{font:'telugu',logo:'plain',tag:'lines',pre:'italic',anim:'focus'},
+  royal_classic:{font:'decorative',logo:'ring',tag:'lines',pre:'caps',anim:'sweep'}};
+function designOf(cfg){var d=DESIGNS[cfg.design]||DESIGNS.classic,o={};['font','logo','tag','pre','anim'].forEach(function(k){o[k]=cfg[k+'_style']||d[k];});return o;}
+function fontOf(s){return FONT.f.replace('{s}',s);}
+function gradStops(gr){[0,.28,.55,.8,1].forEach(function(o,i){gr.addColorStop(o,TH.grad[i]);});return gr;}
+/* the logo in the title's own colour: the emblem takes the metallic gradient, the drawing in its window keeps its lines */
+function tintLogo(img){
+  var c=document.createElement('canvas');c.width=img.width;c.height=img.height;var x=c.getContext('2d');
+  var gc=document.createElement('canvas');gc.width=1;gc.height=img.height;var gx=gc.getContext('2d');
+  gx.fillStyle=gradStops(gx.createLinearGradient(0,0,0,img.height));gx.fillRect(0,0,1,img.height);
+  var G=gx.getImageData(0,0,1,img.height).data;
+  x.drawImage(img,0,0);var d=x.getImageData(0,0,c.width,c.height),p=d.data;
+  for(var y=0;y<c.height;y++)for(var X=0;X<c.width;X++){var i=(y*c.width+X)*4,r=p[i],gg=p[i+1],b=p[i+2];
+    if(r>gg+35&&r>b+35){var k=Math.max(0.55,Math.min(1.1,r/112));p[i]=Math.min(255,G[y*4]*k);p[i+1]=Math.min(255,G[y*4+1]*k);p[i+2]=Math.min(255,G[y*4+2]*k);}
+    else{var l=(r+gg+b)/765;p[i]=TH.white[0]*l;p[i+1]=TH.white[1]*l;p[i+2]=TH.white[2]*l;}}
+  x.putImageData(d,0,0);return c;
+}
 function rnd(seed){var s=seed>>>0;return function(){s=(s*1664525+1013904223)>>>0;return s/4294967296;};}
 function ease(x){x=Math.max(0,Math.min(1,x));return x*x*(3-2*x);}
 async function initRender(cfg){
   CFG=cfg;TH=themeFor(cfg.theme||'gold');W=cfg.w;H=cfg.h;cv.width=W;cv.height=H;g=cv.getContext('2d');
-  await document.fonts.load('700 100px "Cinzel Decorative"',cfg.text);
+  DS=designOf(cfg);FONT=FONTS[DS.font]||FONTS.decorative;TG=null;
+  var TXT=FONT.upper?cfg.text.toUpperCase():cfg.text;
+  await document.fonts.load(fontOf(100),TXT);
+  await document.fonts.load('700 40px "Cinzel"','A');await document.fonts.load('400 40px "Great Vibes"','A');
+  if(cfg.presents) await document.fonts.load('italic 600 40px "Cormorant Garamond"',cfg.presents);
+  if(cfg.tagline) await document.fonts.load('600 40px "Cinzel"',cfg.tagline);
   await document.fonts.ready;
+  LOGO=null; if(cfg.logo){ LOGO=new Image(); LOGO.src=cfg.logo; await LOGO.decode(); LOGOIMG=/tint/.test(DS.logo)?tintLogo(LOGO):LOGO; }
+  // with a logo or a line above, those come first and the title starts a little later
+  D=(cfg.logo||cfg.presents)?1.3:0;
+  // titles longer than 5 seconds: the steps are paced so the tag line lands about three quarters of the way in, and the sparkle,
+  // shine and twinkles keep going to the end (KS: how much slower the steps run; KP: how much longer the sparkle lasts)
+  SPREAD=(cfg.seconds||5)>5.01; KS=SPREAD?Math.max(1,0.78*cfg.seconds/(D+3.4)):1; KP=SPREAD?Math.max(1,(cfg.seconds-D*KS-0.8)/4.2):1;
+  // RV: how much longer the title itself takes to appear (in a long title the reveal fills about 45% of the length)
+  RV=SPREAD?Math.max(1,cfg.seconds*0.45/(1.9*KS)):1;
+  SHINES=[2.7*KS,4.1*KS]; if(SPREAD){ SHINES=[(0.5+1.9*RV)*KS]; while(SHINES[SHINES.length-1]+1.3<=cfg.seconds-D*KS-0.4) SHINES.push(SHINES[SHINES.length-1]+1.3); }
   // layout: wrap words so each line fits 82% of the width
-  var size=cfg.size||H*0.115, maxw=W*0.82;
-  g.font='700 '+size+'px "Cinzel Decorative"';
+  var size=cfg.size||H*0.115*(FONT.k||1), maxw=W*0.82;
+  g.font=fontOf(size);
   var lines=[];
-  if(cfg.text.indexOf('\n')>=0){ lines=cfg.text.toUpperCase().split('\n').map(function(l){return l.trim();}).filter(Boolean); }   // lines chosen by the user
-  else{ var words=cfg.text.toUpperCase().split(/\s+/),cur='';
+  if(TXT.indexOf('\n')>=0){ lines=TXT.split('\n').map(function(l){return l.trim();}).filter(Boolean); }   // lines chosen by the user
+  else{ var words=TXT.split(/\s+/),cur='';
     words.forEach(function(w){var t=cur?cur+' '+w:w;if(g.measureText(t).width>maxw&&cur){lines.push(cur);cur=w;}else cur=t;});
     lines.push(cur); }
   lines = lines.map(function(l){ return l.replace(/ +/g, '  '); });      // a little wider gap between words
   // a single very long word is shrunk instead of broken
   var widest=Math.max.apply(null,lines.map(function(l){return g.measureText(l).width;}));
-  if(widest>maxw){size*=maxw/widest;g.font='700 '+size+'px "Cinzel Decorative"';}
-  var lh=size*1.32,top=H*0.47-(lines.length*lh)/2+lh*0.62;
-  L={size:size,lines:lines,lh:lh,y0:top,chars:[]};
+  if(widest>maxw){size*=maxw/widest;g.font=fontOf(size);}
+  var lh=size*1.32;
+  var preS=cfg.presents?Math.min(size*0.42,W*0.05):0, tagS=cfg.tagline?Math.min(size*0.36,W*0.042):0;
+  var ring=/ring/.test(DS.logo), logoH=LOGO?(ring?Math.min(H*0.35,W*0.5):Math.min(H*0.27,W*0.5*LOGO.height/LOGO.width)):0, logoW=LOGO?(ring?logoH:logoH*LOGO.width/LOGO.height):0;
+  var above=(LOGO?logoH+size*0.3:0)+(preS?preS*2.5:0), below=tagS?tagS*2.4:0;
+  var cy=H*0.47+(above-below)/2; if(LOGO) cy=Math.max(cy,H*0.06+above+(lines.length*lh)/2);     // the logo never goes above the top margin
+  var top=cy-(lines.length*lh)/2+lh*0.62;
+  L={size:size,lines:lines,lh:lh,y0:top,chars:[],lineX:[],cy:cy,preS:preS,tagS:tagS};
+  L.preY=top-size*0.9-preS*0.75; L.logo=LOGO?{w:logoW,h:logoH,x:W/2-logoW/2,y:L.preY-(preS?preS*1.5:size*0.1)-logoH}:null;
   var cx=W/2,idx=0;
   lines.forEach(function(l,li){
     var tw=g.measureText(l).width,x=cx-tw/2;
-    for(var i=0;i<l.length;i++){
-      var pre=g.measureText(l.slice(0,i)).width,cw=g.measureText(l[i]).width;
-      L.chars.push({ch:l[i],x:x+pre,y:top+li*lh,w:cw,cxm:x+pre+cw/2,li:li});
-    }
+    L.lineX.push(x);
+    // whole letters (so Telugu and other scripts keep their joined signs together)
+    var segs=(typeof Intl!=='undefined'&&Intl.Segmenter)?Array.from(new Intl.Segmenter(undefined,{granularity:'grapheme'}).segment(l)).map(function(q){return [q.index,q.segment];}):l.split('').map(function(c,i){return [i,c];});
+    segs.forEach(function(q){
+      var pre=g.measureText(l.slice(0,q[0])).width,cw=g.measureText(q[1]).width;
+      L.chars.push({ch:q[1],x:x+pre,y:top+li*lh,w:cw,cxm:x+pre+cw/2,li:li});
+    });
   });
   var tx0=Math.min.apply(null,L.chars.map(function(c){return c.x;})),tx1=Math.max.apply(null,L.chars.map(function(c){return c.x+c.w;}));
-  L.x0=tx0;L.x1=tx1;L.floorY=top+(lines.length-1)*lh+size*0.16;
+  L.x0=tx0;L.x1=tx1;L.floorY=top+(lines.length-1)*lh+size*0.16;L.tagY=L.floorY+tagS*1.75;
   L.maxd=Math.max.apply(null,L.chars.map(function(c){return Math.abs(c.cxm-cx)+(c.li)*size*0.5;}));
   // particles (deterministic)
   var r=rnd(11);P=[];
   var midY=top+((lines.length-1)*lh)/2-size*0.32, span=tx1-tx0;
   var K=(cfg.dust===undefined||cfg.dust===null)?1:cfg.dust;
   // bubbles: big soft bokeh and glassy rimmed bubbles, drifting upward all the way through
-  for(var i=0;i<Math.round(120*K);i++){var bx=tx0-span*0.06+r()*span*1.12,big=r()<.25;
+  for(var i=0;i<Math.round(120*K*KP);i++){var bx=tx0-span*0.06+r()*span*1.12,big=r()<.25;
     P.push({k:'b',glass:r()<.45,x:bx,y:midY+(r()-.45)*size*(big?1.5:1.1),vx:(r()-.5)*36,vy:-14-r()*46,sw:r()*6.28,rad:size*(0.04+r()*r()*(big?0.42:0.2)),
-    t0:0.05+r()*3.0,life:1.3+r()*2.2,col:r()<.22?TH.white:TH.bokeh[Math.floor(r()*TH.bokeh.length)],a:0.35+r()*0.6});}
+    t0:(0.05+r()*3.0)*KP,life:1.3+r()*2.2,col:r()<.22?TH.white:TH.bokeh[Math.floor(r()*TH.bokeh.length)],a:0.35+r()*0.6});}
   // pixie dust: lots of tiny glitter with short trails, spawned along the whole band and fountaining up from the floor line
-  for(var i=0;i<Math.round(1500*K);i++){var fl=r()<.4,bx=tx0-span*0.05+r()*span*1.1;
+  for(var i=0;i<Math.round(1500*K*KP);i++){var fl=r()<.4,bx=tx0-span*0.05+r()*span*1.1;
     P.push({k:'d',x:bx,y:fl?L.floorY+(r()-.5)*size*0.1:midY+(r()-.5)*size*1.5,
       vx:(r()-.5)*(fl?50:80),vy:fl?-(30+r()*120):(r()-.62)*90,rad:0.7+r()*2.2,
-      t0:r()*4.2,life:0.7+r()*1.9,col:TH.dust[r()<.3?TH.dust.length-1:Math.floor(r()*(TH.dust.length-1))],a:0.5+r()*0.5,ph:r()*6.28});}
+      t0:r()*4.2*KP,life:0.7+r()*1.9,col:TH.dust[r()<.3?TH.dust.length-1:Math.floor(r()*(TH.dust.length-1))],a:0.5+r()*0.5,ph:r()*6.28});}
   // four-point twinkle stars on and around the letters
-  for(var i=0;i<Math.round(60*K);i++){var c=L.chars[Math.floor(r()*L.chars.length)];
-    P.push({k:'s',x:c.x+r()*c.w,y:c.y-r()*size*0.8,rad:size*(0.05+r()*0.14),t0:0.7+r()*3.6,life:0.45+r()*0.5,col:TH.star||[255,255,255],a:0.9,rot:(r()-.5)*0.6});}
+  for(var i=0;i<Math.round(60*K*KP);i++){var c=L.chars[Math.floor(r()*L.chars.length)];
+    P.push({k:'s',x:c.x+r()*c.w,y:c.y-r()*size*0.8,rad:size*(0.05+r()*0.14),t0:(0.7+r()*3.6)*KP,life:0.45+r()*0.5,col:TH.star||[255,255,255],a:0.9,rot:(r()-.5)*0.6});}
 }
 function goldText(ch,x,y,alpha,blur,t){
   g.save();g.globalAlpha=alpha;if(blur>0.2)g.filter='blur('+blur+'px)';
-  g.font='700 '+L.size+'px "Cinzel Decorative"';g.textBaseline='alphabetic';
+  g.font=fontOf(L.size);g.textBaseline='alphabetic';
   g.shadowColor='rgba('+TH.glow+',0.55)';g.shadowBlur=L.size*0.16;
   g.fillStyle=TH.depth;g.fillText(ch,x+L.size*0.012,y+L.size*0.016);  // depth
   g.shadowBlur=0;
-  var gr=g.createLinearGradient(0,y-L.size*0.78,0,y+L.size*0.22);
+  var gr=g.createLinearGradient(0,y-L.size*0.78,0,y+L.size*(FONT.low||0.22));      // low: how far letters reach under the line
   [0,.28,.55,.8,1].forEach(function(o,i){gr.addColorStop(o,TH.grad[i]);});
   g.fillStyle=gr;g.fillText(ch,x,y);
   g.lineWidth=Math.max(1,L.size*0.014);g.strokeStyle=TH.edge;g.strokeText(ch,x,y);
   g.restore();
 }
-function renderFrame(t){
-  g.setTransform(1,0,0,1,0,0);g.fillStyle='#000';g.fillRect(0,0,W,H);
+/* the academy logo at the top, the small line above the title, and the tag line under it */
+function drawExtras(T,TR){
   var cx=W/2,S=L.size;
+  if(L.logo){ var a=ease(T/1.0), sc=0.94+0.06*a, lg=L.logo, mx=cx, my=lg.y+lg.h/2, ring=/ring/.test(DS.logo);
+    var iw=ring?lg.w*0.72:lg.w, ih=iw*LOGO.height/LOGO.width, ix=mx-iw/2, iy=my-ih/2-(ring?lg.h*0.02:0);
+    g.save();g.globalAlpha=a;g.translate(mx,my);g.scale(sc,sc);g.translate(-mx,-my);
+    g.save();g.globalCompositeOperation='lighter';var hg=g.createRadialGradient(mx,my,lg.h*0.1,mx,my,lg.w*0.75);
+    hg.addColorStop(0,'rgba('+TH.glow+',0.30)');hg.addColorStop(1,'rgba('+TH.glow+',0)');g.fillStyle=hg;g.fillRect(mx-lg.w,my-lg.w,2*lg.w,2*lg.w);g.restore();
+    if(ring){ var R=lg.w/2, pr=ease(T/1.3);          // a seal: two rings that draw themselves round the emblem
+      g.save();g.fillStyle='rgba(0,0,0,0.55)';g.beginPath();g.arc(mx,my,R*0.97,0,6.283);g.fill();
+      g.strokeStyle=gradStops(g.createLinearGradient(0,my-R,0,my+R));g.lineWidth=Math.max(2,R*0.035);g.shadowColor='rgba('+TH.glow+',0.8)';g.shadowBlur=R*0.12;
+      g.beginPath();g.arc(mx,my,R*0.97,-Math.PI/2,-Math.PI/2+6.283*pr);g.stroke();
+      g.shadowBlur=0;g.lineWidth=Math.max(1,R*0.01);g.beginPath();g.arc(mx,my,R*0.89,-Math.PI/2,-Math.PI/2-6.283*pr,true);g.stroke();g.restore();
+      if(SPREAD&&pr>=1){ var ga=-Math.PI/2+(TR-1.3*KS)*1.5,gl=ease((TR-1.3*KS)/0.5);       // once drawn, a glint keeps travelling round the seal
+        g.save();g.globalCompositeOperation='lighter';g.lineCap='round';
+        for(var q=0;q<10;q++){g.strokeStyle='rgba('+TH.core+','+(0.11*gl*(q+1)/10*1.6)+')';g.lineWidth=Math.max(2,R*0.045);g.shadowColor='rgba('+TH.core+',0.9)';g.shadowBlur=R*0.1;
+          g.beginPath();g.arc(mx,my,R*0.97,ga-0.9+q*0.09,ga-0.9+(q+1)*0.09+0.02);g.stroke();}
+        g.restore(); } }
+    g.shadowColor='rgba('+TH.core+',0.9)';g.shadowBlur=lg.h*0.03;g.drawImage(LOGOIMG,ix,iy,iw,ih);      // a thin bright rim so the dark red reads on black
+    g.shadowBlur=0;g.drawImage(LOGOIMG,ix,iy,iw,ih);g.restore(); }
+  if(CFG.presents){ var a=ease((T-0.55)/0.9); if(a>0){ g.save();g.globalAlpha=a;g.textAlign='center';g.textBaseline='alphabetic';
+    var ptxt=CFG.presents,psp=L.preS*0.04;
+    if(DS.pre==='caps'){ ptxt=ptxt.toUpperCase();psp=L.preS*0.2;g.font='600 '+(L.preS*0.66)+'px "Cinzel"'; } else g.font='italic 600 '+L.preS+'px "Cormorant Garamond"';
+    try{g.letterSpacing=psp+'px';}catch(e){}
+    g.shadowColor='rgba('+TH.glow+',0.6)';g.shadowBlur=L.preS*0.5;g.fillStyle=TH.grad[0];g.fillText(ptxt,cx+psp/2,L.preY+(1-a)*L.preS*0.3);g.restore(); } }
+  if(CFG.tagline){ var a=ease((T-D-2.5-(SPREAD?1.9*(RV-1)-0.25:0))/0.9); if(a>0){ var ts=L.tagS,y=L.tagY,sp=0,txt=CFG.tagline;
+    g.save();g.globalAlpha=a;g.textAlign='center';g.textBaseline='alphabetic';
+    if(DS.tag==='script'){ ts=L.tagS*2.0;y+=L.tagS*0.55;g.font='400 '+ts+'px "Great Vibes"'; }
+    else if(DS.tag==='lines'){ ts=L.tagS*1.3;y+=L.tagS*0.15;g.font='italic 600 '+ts+'px "Cormorant Garamond"';sp=ts*0.05; }
+    else { g.font='600 '+ts+'px "Cinzel"';sp=ts*(0.34-0.12*a); }
+    try{g.letterSpacing=sp+'px';}catch(e){}
+    var tw=g.measureText(txt).width;
+    if(DS.tag==='box'){ var bw=tw+ts*2.2,bh=ts*2.0,by=y-ts*1.37;y+=ts*0.12;by+=ts*0.12;       // a thin outlined plate round the tag line
+      g.save();g.strokeStyle=gradStops(g.createLinearGradient(0,by,0,by+bh));g.lineWidth=Math.max(1.5,ts*0.06);g.shadowColor='rgba('+TH.glow+',0.7)';g.shadowBlur=ts*0.4;
+      g.beginPath();g.roundRect(cx-bw/2,by,bw,bh,bh/2);g.stroke();g.restore(); }
+    if(DS.tag==='lines'){ var ll=ts*3.2*a,gap=ts*0.8;                                             // a fine line each side of the tag line
+      [-1,1].forEach(function(k){var xa=cx+k*(tw/2+gap),xb=xa+k*ll,lg2=g.createLinearGradient(xa,0,xb,0);lg2.addColorStop(0,'rgba('+TH.core+',0.9)');lg2.addColorStop(1,'rgba('+TH.glow+',0)');
+        g.fillStyle=lg2;g.fillRect(Math.min(xa,xb),y-ts*0.32,ll,Math.max(1.5,ts*0.05));}); }
+    g.shadowColor='rgba('+TH.glow+',0.55)';g.shadowBlur=ts*0.4;g.fillStyle=gradStops(g.createLinearGradient(0,y-ts*0.8,0,y+ts*0.2));g.fillText(txt,cx+sp/2,y);g.restore(); } }
+}
+/* two title animations that bring the whole word in at once: a light that sweeps across and writes it, and a slow focus from a soft blur */
+function wholeLines(t){
+  var S=L.size,cx=W/2;
+  if(DS.anim==='focus'){ var u=(t-0.3)/(1.7*RV),a=ease(u); if(a<=0)return; var sc=1+(1-a)*0.22;
+    g.save();g.translate(cx,L.cy);g.scale(sc,sc);g.translate(-cx,-L.cy);
+    L.lines.forEach(function(l,li){goldText(l,L.lineX[li],L.y0+li*L.lh,a,(1-a)*S*0.28,t);});g.restore();
+    var f=Math.max(0,1-Math.abs(t-0.3-1.6*RV)/0.4)*0.45;
+    if(f>0){g.save();g.globalCompositeOperation='lighter';g.globalAlpha=f;g.filter='blur('+S*0.06+'px)';g.fillStyle=TH.flash;g.font=fontOf(S);L.lines.forEach(function(l,li){g.fillText(l,L.lineX[li],L.y0+li*L.lh);});g.restore();}
+  } else { var u=(t-0.3)/(1.9*RV); if(u<=0)return; var x0=L.x0-S*0.6,x1=L.x1+S*0.9,ex=x0+(x1-x0)*ease(u),fe=S*0.55;
+    L.lines.forEach(function(l,li){goldText(l,L.lineX[li],L.y0+li*L.lh,1,0,t);});
+    if(u<1){ g.save();g.globalCompositeOperation='destination-in';var m=g.createLinearGradient(ex-fe,0,ex,0);m.addColorStop(0,'rgba(0,0,0,1)');m.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=m;g.fillRect(0,0,W,H);g.restore();
+      SPARK={x:ex-fe*0.35,a:Math.sin(Math.min(1,u)*Math.PI)}; } }
+}
+function drawFrame(t){
+  SPARK=null;
+  g.setTransform(1,0,0,1,0,0);g.fillStyle='#000';g.fillRect(0,0,W,H);
+  var cx=W/2,S=L.size,TR=t,T=t/KS;
+  drawExtras(T,TR);
+  t=T-D; var tp=SPREAD?TR-D*KS:t;      // tp: the clock for sparkle and shine, which run at their natural speed      // everything about the title itself runs on its own clock, after the logo and the line above
   // soft floor glow + bright line, lights up with the text
   var fa=ease((t-0.15)/0.9), shimmer=1+0.05*Math.sin(t*5);
   g.save();g.globalCompositeOperation='lighter';
@@ -112,9 +217,9 @@ function renderFrame(t){
   if(!TG){TG=document.createElement('canvas');TG.width=W;TG.height=H;}
   var tg=TG.getContext('2d');tg.setTransform(1,0,0,1,0,0);tg.clearRect(0,0,W,H);
   var G=g;g=tg;
-  L.chars.forEach(function(c){
+  if(DS.anim==='sweep'||DS.anim==='focus') wholeLines(t); else L.chars.forEach(function(c){
     if(c.ch===' ')return;
-    var d=(Math.abs(c.cxm-cx)+c.li*S*0.5)/L.maxd, st=0.25+d*1.5+c.li*0.15;
+    var d=(Math.abs(c.cxm-cx)+c.li*S*0.5)/L.maxd, st=0.25+d*1.5*RV+c.li*0.15;
     var u=(t-st)/0.9, a=ease(u); if(a<=0)return;
     var back=1+2.2*Math.pow(u-1,3)+1.2*Math.pow(u-1,2); if(u>=1)back=1;
     var rise=(1-Math.min(1,Math.max(0,back)))*S*0.22, sc=1+(1-ease(u))*0.28;
@@ -122,11 +227,11 @@ function renderFrame(t){
     goldText(c.ch,c.x,c.y+rise,a,(1-a)*S*0.14,t);
     g.restore();
     var f=Math.max(0,1-Math.abs(t-st-0.5)/0.35)*0.4;
-    if(f>0){g.save();g.globalCompositeOperation='lighter';g.globalAlpha=f;g.filter='blur('+S*0.05+'px)';g.fillStyle=TH.flash;g.font='700 '+S+'px "Cinzel Decorative"';g.fillText(c.ch,c.x,c.y);g.restore();}
+    if(f>0){g.save();g.globalCompositeOperation='lighter';g.globalAlpha=f;g.filter='blur('+S*0.05+'px)';g.fillStyle=TH.flash;g.font=fontOf(S);g.fillText(c.ch,c.x,c.y);g.restore();}
   });
   // shine: a bright diagonal band sweeping across the finished text, twice
-  [2.7,4.1].forEach(function(t0){
-    var u=(t-t0)/0.9; if(u<0||u>1)return;
+  SHINES.forEach(function(t0){
+    var u=(tp-t0)/0.9; if(u<0||u>1)return;
     var bx=L.x0-S*1.2+(L.x1-L.x0+S*2.4)*ease(u), bw=S*0.9;
     tg.save();tg.globalCompositeOperation='source-atop';
     var sg=tg.createLinearGradient(bx-bw,0,bx+bw,S*0.5);
@@ -134,13 +239,18 @@ function renderFrame(t){
     tg.fillStyle=sg;tg.fillRect(L.x0-S,L.y0-S*1.2,L.x1-L.x0+2*S,S*2.2+(L.lines.length-1)*L.lh);tg.restore();
   });
   g=G;
-  g.save();var zoom=1+0.035*(t/CFG.seconds);g.translate(cx,H*0.47);g.scale(zoom,zoom);g.translate(-cx,-H*0.47);
+  g.save();var zoom=1+0.035*(TR/CFG.seconds);g.translate(cx,L.cy);g.scale(zoom,zoom);g.translate(-cx,-L.cy);
   g.drawImage(TG,0,0);
   g.restore();
+  if(SPARK){ var sy=L.y0+((L.lines.length-1)*L.lh)/2-S*0.32,r=S*0.95;      // the light that writes the title
+    g.save();g.globalCompositeOperation='lighter';var sg=g.createRadialGradient(SPARK.x,sy,0,SPARK.x,sy,r);
+    sg.addColorStop(0,'rgba('+TH.core+','+(0.95*SPARK.a)+')');sg.addColorStop(.25,'rgba('+TH.glow+','+(0.5*SPARK.a)+')');sg.addColorStop(1,'rgba('+TH.glow+',0)');
+    g.fillStyle=sg;g.fillRect(SPARK.x-r,sy-r,2*r,2*r);g.fillStyle='rgba('+TH.core+','+(0.8*SPARK.a)+')';g.fillRect(SPARK.x-1.5,sy-S*0.8,3,S*1.6);g.restore(); }
   // sparkle band: bokeh discs and dust
   g.save();g.globalCompositeOperation='lighter';
   // the sparkle fades away well before the end, so the last moments are the clear title only
-  var Tend=CFG.seconds||5, dustEnv=1-ease((t-Tend*0.5)/(Tend*0.28));
+  var Tend=(CFG.seconds||5)-D*KS, dustEnv=SPREAD?1-0.5*ease((tp-Tend*0.85)/(Tend*0.15)):1-ease((t-Tend*0.5)/(Tend*0.28));
+  t=tp;
   if(dustEnv>0) P.forEach(function(p){
     var u=(t-p.t0)/p.life; if(u<0||u>1)return;
     var dt=t-p.t0, al=Math.sin(u*Math.PI)*p.a*dustEnv, x=p.x+p.vx*dt, y=p.y+p.vy*dt;
@@ -168,6 +278,13 @@ function renderFrame(t){
     }
   });
   g.restore();
-  return cv.toDataURL('image/png').split(',')[1];
 }
+function renderFrame(t){drawFrame(t);return cv.toDataURL('image/png').split(',')[1];}
+/* live preview: render.html?play={...settings...} plays the title in a loop (used by the designs page) */
+(function(){ var q=new URLSearchParams(location.search); if(!q.has('play'))return;
+  var cfg=JSON.parse(q.get('play'));cv.style.width='100%';cv.style.height='auto';
+  initRender(cfg).then(function(){ var T=cfg.seconds+1.5,t0=performance.now(),last=0;
+    window.addEventListener('message',function(e){ if(e.data==='replay') t0=performance.now(); });
+    (function loop(now){ requestAnimationFrame(loop); if(now-last<33)return; last=now; drawFrame(Math.min(cfg.seconds,((now-t0)/1000)%T)); })(t0); });
+})();
 </script></body></html>
